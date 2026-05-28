@@ -759,7 +759,7 @@ body.cam-fs-open { overflow: hidden; }    /* lock background scroll while popup 
 /* Preset selector — 5 chips above the readout */
 .preset-chips {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
 }
 .preset-chip {

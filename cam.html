@@ -473,6 +473,80 @@
       }
     },
     {
+      id: "cinematic", name: "Cinematic", sub: "Anamorphic · blue flare",
+      filter: "saturate(.78) contrast(1.22) brightness(.93) hue-rotate(8deg)",
+      overlay(ctx, W, H, grain) {
+        // cool teal wash
+        ctx.globalCompositeOperation = "soft-light";
+        const wash = ctx.createLinearGradient(0, 0, 0, H);
+        wash.addColorStop(0,  "rgba(80,150,220,.32)");
+        wash.addColorStop(.5, "rgba(100,170,230,.20)");
+        wash.addColorStop(1,  "rgba(60,120,200,.32)");
+        ctx.fillStyle = wash; ctx.fillRect(0, 0, W, H);
+
+        // primary J.J. anamorphic streak — bright cyan beam across the upper third
+        ctx.globalCompositeOperation = "screen";
+        const fy1 = H * 0.32;
+        const f1 = ctx.createLinearGradient(0, fy1, W, fy1);
+        f1.addColorStop(0,    "rgba(80,180,255,0)");
+        f1.addColorStop(.15,  "rgba(140,210,255,.32)");
+        f1.addColorStop(.40,  "rgba(200,240,255,.90)");
+        f1.addColorStop(.60,  "rgba(220,245,255,.95)");
+        f1.addColorStop(.85,  "rgba(140,210,255,.32)");
+        f1.addColorStop(1,    "rgba(80,180,255,0)");
+        ctx.fillStyle = f1; ctx.fillRect(0, fy1 - 14, W, 28);
+
+        // bright lens-flare orb centered on the streak
+        const orb = ctx.createRadialGradient(W*.50, fy1, 0, W*.50, fy1, W*.38);
+        orb.addColorStop(0,   "rgba(225,240,255,.85)");
+        orb.addColorStop(.20, "rgba(165,215,255,.45)");
+        orb.addColorStop(.55, "rgba(110,180,240,.12)");
+        orb.addColorStop(1,   "rgba(0,0,0,0)");
+        ctx.fillStyle = orb; ctx.fillRect(0, fy1 - W*.38, W, W*.76);
+
+        // secondary streak — lower, mid-frame
+        const fy2 = H * 0.58;
+        const f2 = ctx.createLinearGradient(0, fy2, W, fy2);
+        f2.addColorStop(0,    "rgba(80,180,255,0)");
+        f2.addColorStop(.20,  "rgba(120,200,255,.22)");
+        f2.addColorStop(.50,  "rgba(190,230,255,.70)");
+        f2.addColorStop(.80,  "rgba(120,200,255,.22)");
+        f2.addColorStop(1,    "rgba(80,180,255,0)");
+        ctx.fillStyle = f2; ctx.fillRect(0, fy2 - 8, W, 16);
+
+        // tertiary thin streak near the bottom
+        const fy3 = H * 0.78;
+        const f3 = ctx.createLinearGradient(0, fy3, W, fy3);
+        f3.addColorStop(0,    "rgba(100,180,255,0)");
+        f3.addColorStop(.5,   "rgba(180,220,255,.42)");
+        f3.addColorStop(1,    "rgba(100,180,255,0)");
+        ctx.fillStyle = f3; ctx.fillRect(0, fy3 - 4, W, 8);
+
+        // a couple of ghost orbs along the optical-axis diagonal
+        const g1 = ctx.createRadialGradient(W*.18, H*.45, 0, W*.18, H*.45, W*.13);
+        g1.addColorStop(0, "rgba(160,200,255,.45)");
+        g1.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g1; ctx.fillRect(W*.05, H*.32, W*.26, W*.26);
+
+        const g2 = ctx.createRadialGradient(W*.82, H*.50, 0, W*.82, H*.50, W*.11);
+        g2.addColorStop(0, "rgba(140,190,255,.35)");
+        g2.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g2; ctx.fillRect(W*.71, H*.39, W*.22, W*.22);
+
+        ctx.globalCompositeOperation = "source-over";
+
+        // heavy moody vignette with cool tint
+        const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*.30, W/2, H/2, Math.max(W,H)*.75);
+        vg.addColorStop(0,    "rgba(0,0,0,0)");
+        vg.addColorStop(.55,  "rgba(0,8,30,.30)");
+        vg.addColorStop(1,    "rgba(0,8,28,.88)");
+        ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+
+        // subtle filmic grain
+        drawGrain(ctx, W, H, grain, .12);
+      }
+    },
+    {
       id: "ektachrome", name: "Ektachrome", sub: "Vivid · daylight",
       filter: "saturate(1.45) contrast(1.18) brightness(1.05) hue-rotate(-3deg)",
       overlay(ctx, W, H, grain) {
