@@ -1212,10 +1212,14 @@ void main(){
     toast("Captured ✓ " + REEL.name);
   }
 
+  // Album button stays a clean count badge — no photo preview leaks
+  // onto the camera view. Photos only appear when the album modal opens.
   function renderThumb() {
-    if (!shots[0]) { thumbEl.textContent = "—"; return; }
-    thumbEl.innerHTML = '<img src="' + shots[0].src + '" alt="last frame" />';
+    const n = shots.length;
+    thumbEl.textContent = String(n).padStart(2, "0");
   }
+  // initialize at "00"
+  renderThumb();
 
   /* ---------- album ---------- */
   const albumEl       = document.getElementById("album");
