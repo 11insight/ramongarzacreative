@@ -599,8 +599,24 @@ function Super8Cam() {
   const [tc, setTc] = useState("00:00:00:00");
   const [iso, setIso] = useState(400);
   const [saveNote, setSaveNote] = useState("");
+  const [fullscreen, setFullscreen] = useState(false);
 
   const preset = PRESETS[presetIx];
+
+  // lock background scroll while the cam popup is open
+  useEffect(() => {
+    if (fullscreen) document.body.classList.add("cam-fs-open");
+    else document.body.classList.remove("cam-fs-open");
+    return () => document.body.classList.remove("cam-fs-open");
+  }, [fullscreen]);
+
+  // Esc closes the fullscreen popup (and cuts the stream)
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e) => { if (e.key === "Escape") { setFullscreen(false); } };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen]);
 
   // one-time: build a small noise tile (reused every frame) + a tmp canvas for the halation pass
   useEffect(() => {
@@ -670,6 +686,7 @@ function Super8Cam() {
         audio: false
       });
       setStream(s);
+      setFullscreen(true);                     // pop into the fullscreen phone view
       if (videoRef.current) {
         videoRef.current.srcObject = s;
         await videoRef.current.play();
@@ -682,6 +699,7 @@ function Super8Cam() {
   };
 
   const stop = useCallback(() => {
+    setFullscreen(false);                      // exit popup
     setStream(prev => {
       if (prev) prev.getTracks().forEach(t => t.stop());
       return null;
@@ -741,7 +759,10 @@ function Super8Cam() {
         </div>
       </div>
 
-      <div className="cam-stage">
+      <div className={`cam-stage ${fullscreen ? "fullscreen" : ""}`}>
+        {fullscreen && (
+          <button className="cam-fs-close" onClick={stop} aria-label="Close camera">✕</button>
+        )}
         {/* iPhone 17 Pro live viewfinder — canvas paints every frame so preview = capture */}
         <div className="iphone-frame">
           <div className="screen">

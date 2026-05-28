@@ -618,6 +618,59 @@ section.scene.compact .brackets { display: none; }
   margin-top: 30px;
 }
 
+/* Fullscreen pop-up mode — Roll Tape lifts the cam into a real phone-sized
+   viewfinder over the page so the user can frame the shot properly. */
+.cam-stage.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  background: #000;
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 14px;
+  padding:
+    max(env(safe-area-inset-top), 14px)
+    16px
+    max(env(safe-area-inset-bottom), 14px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cam-stage.fullscreen .iphone-frame {
+  width: min(360px, 92vw);
+  max-width: 360px;
+  margin: 0 auto;
+  align-self: center;
+  justify-self: center;
+}
+.cam-stage.fullscreen .cam-controls {
+  width: min(560px, 100%);
+  margin: 0 auto;
+  gap: 14px;
+}
+.cam-stage.fullscreen .cam-readout {
+  grid-template-columns: repeat(2, 1fr);
+}
+.cam-stage.fullscreen .cam-strip { display: none; }   /* keep the popup focused — filmstrip lives in the inline view */
+
+.cam-fs-close {
+  position: fixed;
+  top: max(env(safe-area-inset-top), 8px);
+  right: 10px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(20,20,20,.85);
+  color: var(--vy-fg);
+  font-size: 22px; line-height: 1;
+  display: grid; place-items: center;
+  cursor: pointer;
+  z-index: 9600;
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(6px);
+}
+.cam-fs-close:hover { background: rgba(40,40,40,.95); }
+body.cam-fs-open { overflow: hidden; }    /* lock background scroll while popup is up */
+
 /* iPhone 17 Pro-ish bezel */
 .iphone-frame {
   position: relative;
@@ -668,7 +721,16 @@ section.scene.compact .brackets { display: none; }
 }
 
 /* Hidden raw video source — the canvas below is what's actually shown. */
-.cam-video-source { position: absolute; inset: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+/* Hidden video source — must have REAL layout dimensions (not 1×1) or iOS Safari
+   throttles it and never delivers frames to drawImage, which produces black photos.
+   Opacity:0 keeps it invisible; the canvas above paints the processed feed. */
+.cam-video-source {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+}
 
 /* Live filmcam canvas — every preset is rendered into THIS element every frame,
    so the preview pixel-for-pixel matches the saved photo (WYSIWYG). */
@@ -677,6 +739,7 @@ section.scene.compact .brackets { display: none; }
   width: 100%; height: 100%;
   display: block;
   object-fit: cover;
+  z-index: 2;            /* paint over the hidden video source */
 }
 
 /* Save-confirmation toast that pops under the controls after a snap */
