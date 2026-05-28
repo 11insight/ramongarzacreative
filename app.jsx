@@ -834,35 +834,8 @@ function Super8Cam() {
         </div>
       </div>
 
-      <div className={`cam-stage ${fullscreen ? "fullscreen" : ""}`}>
-        {fullscreen && (
-          <button className="cam-fs-close" onClick={stop} aria-label="Close camera">✕</button>
-        )}
-        {/* iPhone 17 Pro live viewfinder — canvas paints every frame so preview = capture */}
-        <div className="iphone-frame">
-          <div className="screen">
-            <div className="dynamic-island" />
-            <div className="cam-video-wrap">
-              {stream ? (
-                <>
-                  <video ref={videoRef} className="cam-video-source" playsInline muted autoPlay />
-                  <canvas ref={canvasRef} className="cam-canvas" width={CAM_W} height={CAM_H} />
-                  <span className="cam-rec">REC · {preset.name}</span>
-                  <span className="cam-tc">{tc}</span>
-                  <span className="cam-foot-lbl">RGC · {preset.name} · ISO {iso}</span>
-                </>
-              ) : (
-                <a className="cam-off" href="/cam">
-                  <div className="big">Cam</div>
-                  <div>Tap to launch the<br/>RGC Filmcam — 5 presets</div>
-                </a>
-              )}
-              <div className={`shutter ${flash ? "flash" : ""}`} />
-            </div>
-          </div>
-        </div>
-
-        {/* Controls + meta */}
+      <div className={`cam-stage no-frame ${fullscreen ? "fullscreen" : ""}`}>
+        {/* the live camera lives at /cam — main page is now just a launcher card */}
         <div className="cam-controls">
           <div className="preset-chips" role="radiogroup" aria-label="Film preset">
             {PRESETS.map((p, i) => (

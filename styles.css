@@ -617,6 +617,13 @@ section.scene.compact .brackets { display: none; }
   align-items: start;
   margin-top: 30px;
 }
+/* main-page launcher mode — no embedded phone mockup, controls are the whole card */
+.cam-stage.no-frame {
+  grid-template-columns: 1fr;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* Fullscreen pop-up mode — Roll Tape lifts the cam into a real phone-sized
    viewfinder over the page so the user can frame the shot properly. */
