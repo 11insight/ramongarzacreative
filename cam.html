@@ -729,31 +729,22 @@
   const capTmp = document.createElement("canvas");
   capTmp.width = CAP_W; capTmp.height = CAP_H;
 
-  async function capture() {
+  // Snap = silently add the filtered frame to the in-page album.
+  // Sharing / saving to Photos lives in the album detail view, not here,
+  // so the camera flow doesn't get interrupted by the iOS share sheet on every shot.
+  function capture() {
     if (!stream) return;
     flashOn();
-    // build the filtered frame on the high-res capture canvas
     const capCtx = capCanvas.getContext("2d");
     const preset = PRESETS[presetIx];
     applyPreset(capCtx, capTmp, video, preset, CAP_W, CAP_H);
     const url = capCanvas.toDataURL("image/jpeg", 0.92);
     const id = Date.now();
     shots.unshift({ src: url, id, presetId: preset.id, name: preset.name });
-    if (shots.length > 30) shots.length = 30;     // cap the in-memory album
+    if (shots.length > 30) shots.length = 30;
     renderThumb();
     if (albumEl && albumEl.classList.contains("open")) renderAlbum();
-    try {
-      const blob = await (await fetch(url)).blob();
-      const file = new File([blob], "RGC-" + preset.id + "-" + id + ".jpg", { type: "image/jpeg" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "RGC Filmcam" });
-        toast("Shared ✓");
-      } else {
-        const a = document.createElement("a");
-        a.href = url; a.download = file.name; a.click();
-        toast("Saved ✓");
-      }
-    } catch (e) { /* user cancelled — frame still in album */ }
+    toast("Captured ✓ " + preset.name);
   }
 
   function renderThumb() {
