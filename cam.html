@@ -100,7 +100,32 @@
       z-index: 4;
     }
 
-    /* preset chips */
+    /* single-filter label (replaced the chip selector) */
+    .filter-label {
+      display: grid;
+      gap: 3px;
+      justify-items: center;
+      text-align: center;
+      padding: 6px 12px;
+      font-family: "Space Mono", monospace;
+    }
+    .filter-label .fl-name {
+      font-family: "Hanken Grotesk", system-ui, sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #c8fa3c;
+      text-shadow: 0 0 12px rgba(200,250,60,.55);
+    }
+    .filter-label .fl-sub {
+      font-size: 9.5px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+    }
+
+    /* preset chips (legacy — no longer rendered) */
     .chips {
       display: flex; gap: 6px;
       justify-content: center;            /* center the group on wide screens */
@@ -425,7 +450,10 @@
     </div>
 
     <footer class="bottom">
-      <div class="chips" id="chips" role="radiogroup" aria-label="Film preset"></div>
+      <div class="filter-label" aria-label="Active filter">
+        <span class="fl-name">RGC REEL</span>
+        <span class="fl-sub">CineStill 800T · Halation</span>
+      </div>
       <div class="shutter-row">
         <button class="side left" id="flipBtn" aria-label="Flip camera">⇆</button>
         <button class="shutter" id="shutter" aria-label="Capture photo" disabled></button>
@@ -467,11 +495,254 @@
   <script>
   /* =========================================================
      RGC Filmcam — standalone full-viewport camera.
-     5 presets, WYSIWYG canvas, Web Share API capture, back-camera default.
+     ONE solid filter: a CineStill-800T-style WebGL2 LUT pipeline
+     applied at snap time. Live preview is raw <video> for sharp
+     framing; the look bakes in when the shutter fires.
      ========================================================= */
   const CAM_W = 540, CAM_H = 1170;
+  const REEL = { id: "reel", name: "RGC Reel", sub: "CineStill 800T · Halation" };
 
-  const PRESETS = [
+  /* ---------- procedural CineStill 800T-style 3D LUT ----------
+     Tungsten-balanced look — cool blue shadows, warm rolled-off
+     highlights, lifted milky blacks with a touch of magenta.
+     Generated once at startup as a 32³ HALD canvas (1024×32). */
+  const LUT_SIZE = 32;
+
+  function cineStillTransform(r, g, b) {
+    // sRGB → linear approx
+    let R = Math.pow(r, 2.2);
+    let G = Math.pow(g, 2.2);
+    let B = Math.pow(b, 2.2);
+
+    // tungsten WB push (cool the image, since film is tungsten-balanced)
+    R *= 0.92;
+    B *= 1.10;
+
+    // lift shadows with slight magenta-blue cast (CineStill milky blacks)
+    const lift = 0.045;
+    R = R * (1 - lift) + lift * 0.78;
+    G = G * (1 - lift) + lift * 0.76;
+    B = B * (1 - lift) + lift * 0.95;
+
+    // soft highlight roll-off (compressive, filmic shoulder)
+    R = R / (1 + 0.14 * R);
+    G = G / (1 + 0.17 * G);
+    B = B / (1 + 0.22 * B);
+
+    // warm the highlights toward tungsten
+    const lum = R * 0.299 + G * 0.587 + B * 0.114;
+    if (lum > 0.55) {
+      const t = (lum - 0.55) * 1.5;
+      R += t * 0.05;
+      G += t * 0.015;
+      B -= t * 0.025;
+    }
+
+    // contrast bump
+    R = (R - 0.18) * 1.10 + 0.18;
+    G = (G - 0.18) * 1.10 + 0.18;
+    B = (B - 0.18) * 1.10 + 0.18;
+
+    // back to sRGB
+    R = Math.pow(Math.max(0, Math.min(1, R)), 1 / 2.2);
+    G = Math.pow(Math.max(0, Math.min(1, G)), 1 / 2.2);
+    B = Math.pow(Math.max(0, Math.min(1, B)), 1 / 2.2);
+
+    // tiny film-base bias (warm undertone)
+    return [
+      Math.min(1, R * 1.012),
+      Math.min(1, G * 1.005),
+      Math.max(0, B * 0.990)
+    ];
+  }
+
+  function buildLutCanvas() {
+    const W = LUT_SIZE * LUT_SIZE, H = LUT_SIZE;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const cctx = c.getContext("2d");
+    const img = cctx.createImageData(W, H);
+    const d = img.data;
+    for (let bi = 0; bi < LUT_SIZE; bi++) {
+      const b = bi / (LUT_SIZE - 1);
+      for (let gi = 0; gi < LUT_SIZE; gi++) {
+        const g = gi / (LUT_SIZE - 1);
+        for (let ri = 0; ri < LUT_SIZE; ri++) {
+          const r = ri / (LUT_SIZE - 1);
+          const out = cineStillTransform(r, g, b);
+          const px = bi * LUT_SIZE + ri;
+          const py = gi;
+          const idx = (py * W + px) * 4;
+          d[idx]     = Math.round(out[0] * 255);
+          d[idx + 1] = Math.round(out[1] * 255);
+          d[idx + 2] = Math.round(out[2] * 255);
+          d[idx + 3] = 255;
+        }
+      }
+    }
+    cctx.putImageData(img, 0, 0);
+    return c;
+  }
+
+  /* ---------- WebGL2 shaders ---------- */
+  const VERT_SRC = `#version 300 es
+in vec2 a_pos;
+out vec2 v_uv;
+void main(){
+  gl_Position = vec4(a_pos, 0.0, 1.0);
+  v_uv = (a_pos + 1.0) * 0.5;
+  v_uv.y = 1.0 - v_uv.y;
+}`;
+
+  const FRAG_SRC = `#version 300 es
+precision mediump float;
+in vec2 v_uv;
+uniform sampler2D u_video;
+uniform sampler2D u_lut;
+uniform float u_mirror;
+uniform float u_halo;
+out vec4 outColor;
+
+vec3 sampleLut(vec3 color){
+  float size = ${LUT_SIZE}.0;
+  float sliceSz = 1.0 / size;
+  float pixelSz = sliceSz / size;
+  float bi = color.b * (size - 1.0);
+  float bf = fract(bi);
+  float b0 = floor(bi);
+  float b1 = min(b0 + 1.0, size - 1.0);
+  float halfPx = pixelSz * 0.5;
+  float xR = color.r * (size - 1.0) * pixelSz + halfPx;
+  float yG = (color.g * (size - 1.0) + 0.5) * sliceSz;
+  vec3 c0 = texture(u_lut, vec2(b0 * sliceSz + xR, yG)).rgb;
+  vec3 c1 = texture(u_lut, vec2(b1 * sliceSz + xR, yG)).rgb;
+  return mix(c0, c1, bf);
+}
+
+void main(){
+  vec2 uv = v_uv;
+  if (u_mirror > 0.5) uv.x = 1.0 - uv.x;
+  vec3 src = texture(u_video, uv).rgb;
+
+  // 1. LUT color grade
+  vec3 graded = sampleLut(src);
+
+  // 2. CineStill halation: sample an 8-tap ring around the pixel and
+  //    detect bright neighbors. Bleed warm red glow where highlights spread.
+  float hl = 0.0;
+  const float radius = 0.014;
+  for (int i = 0; i < 8; i++) {
+    float a = float(i) / 8.0 * 6.2831853;
+    vec2 off = vec2(cos(a), sin(a)) * radius;
+    vec3 s = texture(u_video, uv + off).rgb;
+    float l = dot(s, vec3(0.2126, 0.7152, 0.0722));
+    hl += smoothstep(0.78, 1.0, l);
+  }
+  hl /= 8.0;
+  float lLocal = dot(src, vec3(0.2126, 0.7152, 0.0722));
+  hl = max(hl, smoothstep(0.85, 1.0, lLocal) * 0.6);
+
+  vec3 halo = vec3(1.0, 0.32, 0.18) * hl * u_halo;
+  // screen blend the halation onto the graded image
+  vec3 result = 1.0 - (1.0 - graded) * (1.0 - halo);
+
+  outColor = vec4(result, 1.0);
+}`;
+
+  /* ---------- WebGL2 pipeline ---------- */
+  let gl = null, glCanvas = null, glProg = null;
+  let videoTex = null, lutTex = null;
+  let uMirrorLoc = null, uHaloLoc = null;
+
+  function compileShader(gl, type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      throw new Error("Shader compile error: " + gl.getShaderInfoLog(sh));
+    }
+    return sh;
+  }
+  function createProgram(gl, vs, fs) {
+    const p = gl.createProgram();
+    gl.attachShader(p, compileShader(gl, gl.VERTEX_SHADER, vs));
+    gl.attachShader(p, compileShader(gl, gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      throw new Error("Program link error: " + gl.getProgramInfoLog(p));
+    }
+    return p;
+  }
+
+  function initWebGL(W, H) {
+    if (gl) return true;        // idempotent
+    glCanvas = document.createElement("canvas");
+    glCanvas.width = W; glCanvas.height = H;
+    gl = glCanvas.getContext("webgl2", { preserveDrawingBuffer: true, premultipliedAlpha: false });
+    if (!gl) { console.warn("WebGL2 unavailable"); return false; }
+
+    try {
+      glProg = createProgram(gl, VERT_SRC, FRAG_SRC);
+    } catch (e) {
+      console.error(e);
+      gl = null; return false;
+    }
+    gl.useProgram(glProg);
+
+    // fullscreen quad
+    const vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
+    const vbo = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+    const posLoc = gl.getAttribLocation(glProg, "a_pos");
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // video texture (refilled per snap)
+    videoTex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, videoTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.uniform1i(gl.getUniformLocation(glProg, "u_video"), 0);
+
+    // LUT texture (built once, never reuploaded)
+    const lutCanvas = buildLutCanvas();
+    lutTex = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, lutTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, lutCanvas);
+    gl.uniform1i(gl.getUniformLocation(glProg, "u_lut"), 1);
+
+    uMirrorLoc = gl.getUniformLocation(glProg, "u_mirror");
+    uHaloLoc   = gl.getUniformLocation(glProg, "u_halo");
+    gl.uniform1f(uHaloLoc, 0.85);
+    gl.viewport(0, 0, W, H);
+    return true;
+  }
+
+  function captureWithGL(video) {
+    if (!gl) return null;
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, videoTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+    gl.uniform1f(uMirrorLoc, facingMode === "user" ? 1.0 : 0.0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    return glCanvas.toDataURL("image/jpeg", 0.92);
+  }
+
+  /* ---------- legacy PRESETS array kept ONLY as placeholder so any
+     stale references don't crash. Capture path no longer uses this. */
+  const PRESETS = [REEL];
+
+  const _legacyPRESETS_unused_for_typing = [   // (DCE; do not delete the bracket below)
     {
       id: "super8", name: "Super-8", sub: "Dream · anamorphic",
       filter: "saturate(1.25) contrast(1.34) brightness(.96) sepia(.20) hue-rotate(-4deg)",
@@ -781,10 +1052,8 @@
 
   /* ---------- runtime state ---------- */
   let stream = null;
-  let facingMode = "environment";   // default to back camera per user request
-  let presetIx = 0;
+  let facingMode = "environment";   // back camera default
   let shots = [];
-  let rafId = 0, vfcId = 0, active = false;
   let tcStart = 0;
 
   const video    = document.getElementById("video");
@@ -794,30 +1063,9 @@
   const shutter  = document.getElementById("shutter");
   const flipBtn  = document.getElementById("flipBtn");
   const thumbEl  = document.getElementById("thumb");
-  const chipsEl  = document.getElementById("chips");
   const flashEl  = document.getElementById("flash");
   const tcEl     = document.getElementById("tc");
   const toastEl  = document.getElementById("toast");
-
-  /* build the preset chips */
-  PRESETS.forEach((p, i) => {
-    const b = document.createElement("button");
-    b.className = "chip" + (i === 0 ? " on" : "");
-    b.setAttribute("role", "radio");
-    b.setAttribute("aria-checked", String(i === 0));
-    b.dataset.ix = String(i);
-    b.innerHTML = '<span class="name">' + p.name + '</span><span class="sub">' + p.sub + '</span>';
-    b.addEventListener("click", () => setPreset(i));
-    chipsEl.appendChild(b);
-  });
-
-  function setPreset(i) {
-    presetIx = i;
-    Array.from(chipsEl.children).forEach((c, j) => {
-      c.classList.toggle("on", j === i);
-      c.setAttribute("aria-checked", String(j === i));
-    });
-  }
 
   function setFacingClass() {
     video.classList.toggle("front", facingMode === "user");
@@ -894,22 +1142,35 @@
   const capTmp = document.createElement("canvas");
   capTmp.width = CAP_W; capTmp.height = CAP_H;
 
-  // Snap = silently add the filtered frame to the in-page album.
-  // Sharing / saving to Photos lives in the album detail view, not here,
-  // so the camera flow doesn't get interrupted by the iOS share sheet on every shot.
+  // Snap = WebGL2 LUT + halation pipeline, silently add to album.
+  // Sharing/saving to Photos lives in the album detail view so the camera
+  // flow isn't interrupted by the iOS share sheet on every shot.
   function capture() {
     if (!stream) return;
     flashOn();
-    const capCtx = capCanvas.getContext("2d");
-    const preset = PRESETS[presetIx];
-    applyPreset(capCtx, capTmp, video, preset, CAP_W, CAP_H);
-    const url = capCanvas.toDataURL("image/jpeg", 0.92);
+    // run the GL pipeline; fall back to raw video frame if GL is unavailable
+    let url = captureWithGL(video);
+    if (!url) {
+      // last-resort fallback: raw video frame to canvas (no filter)
+      const fb = document.createElement("canvas");
+      fb.width = CAP_W; fb.height = CAP_H;
+      const ctx2 = fb.getContext("2d");
+      const vw = video.videoWidth, vh = video.videoHeight;
+      const scale = Math.max(CAP_W / vw, CAP_H / vh);
+      const dw = vw * scale, dh = vh * scale;
+      const dx = (CAP_W - dw) / 2, dy = (CAP_H - dh) / 2;
+      ctx2.save();
+      if (facingMode === "user") { ctx2.translate(CAP_W, 0); ctx2.scale(-1, 1); ctx2.drawImage(video, CAP_W - dx - dw, dy, dw, dh); }
+      else { ctx2.drawImage(video, dx, dy, dw, dh); }
+      ctx2.restore();
+      url = fb.toDataURL("image/jpeg", 0.92);
+    }
     const id = Date.now();
-    shots.unshift({ src: url, id, presetId: preset.id, name: preset.name });
+    shots.unshift({ src: url, id, presetId: REEL.id, name: REEL.name });
     if (shots.length > 30) shots.length = 30;
     renderThumb();
     if (albumEl && albumEl.classList.contains("open")) renderAlbum();
-    toast("Captured ✓ " + preset.name);
+    toast("Captured ✓ " + REEL.name);
   }
 
   function renderThumb() {
@@ -1015,6 +1276,7 @@
   window.addEventListener("pagehide", stopCamera);
 
   buildGrain();
+  initWebGL(CAP_W, CAP_H);     // compile shaders, build the procedural CineStill LUT, upload
   </script>
 </body>
 </html>
