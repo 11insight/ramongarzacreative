@@ -2281,8 +2281,17 @@ h2.section-title em {
   h2.section-title em { font-size: .85em; }
 
   /* ───── 00 HERO ───── */
-  .hero { padding: 60px 0 0; min-height: 100vh; }
-  .hero-top { padding: 56px 5vw 24px; gap: 18px; grid-template-columns: 1fr; }
+  /* reorder on mobile: wordmark first, slate meta second, bolt + tag last */
+  .hero {
+    padding: 60px 0 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-center { order: 1; padding-top: 8px; }
+  .hero-top    { order: 2; }
+  .hero-bottom { order: 3; }
+  .hero-top { padding: 28px 5vw 24px; gap: 18px; grid-template-columns: 1fr; }
   .hero-top .slate-name { font-size: clamp(28px, 9vw, 52px); }
   .hero-top .stack { grid-template-columns: 70px 1fr; gap: 3px 12px; font-size: 10px; }
   .hero-center { padding: 12px 5vw; }
