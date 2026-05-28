@@ -193,7 +193,14 @@
       100% { opacity: 0; }
     }
 
-    /* recent thumb */
+    /* recent thumb + 'Album' label sitting under it */
+    .thumb-wrap {
+      justify-self: end;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
     .thumb {
       width: 52px; height: 52px;
       border-radius: 10px;
@@ -201,12 +208,19 @@
       backdrop-filter: blur(8px);
       border: 1px solid rgba(255,255,255,.16);
       overflow: hidden;
-      justify-self: end;
       display: grid; place-items: center;
       color: rgba(255,255,255,.45);
       font-family: "Space Mono", monospace; font-size: 10px;
     }
     .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-label {
+      font-family: "Space Mono", monospace;
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.55);
+      line-height: 1;
+    }
 
     /* permission gate / errors */
     .gate {
@@ -415,7 +429,10 @@
       <div class="shutter-row">
         <button class="side left" id="flipBtn" aria-label="Flip camera">⇆</button>
         <button class="shutter" id="shutter" aria-label="Capture photo" disabled></button>
-        <button class="thumb" id="thumb" aria-label="Last frame">06</button>
+        <div class="thumb-wrap">
+          <button class="thumb" id="thumb" aria-label="Open album">06</button>
+          <span class="thumb-label">Album</span>
+        </div>
       </div>
     </footer>
 
