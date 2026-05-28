@@ -1,0 +1,172 @@
+/* ============================================================
+   VY — Colors & Type
+   The "GO Plus" palette from the Vy admin mockup.
+   Brand DNA: black canvas, electric iris blue, acid-green CTA,
+   Bebas Neue display, Hanken Grotesk body, Space Mono labels.
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap");
+
+:root {
+  /* ---------- Core palette ---------- */
+  --vy-black:        #000000;
+  --vy-near-black:   #0A0A0C;
+  --vy-surface:      #0E0E11;   /* card surface */
+  --vy-surface-2:    #0E0E13;   /* form card surface */
+  --vy-chrome:       #2A2A2E;   /* browser/chrome bg */
+  --vy-chrome-deep:  #1C1C1F;   /* deep chrome / inputs */
+  --vy-white:        #FFFFFF;
+
+  /* ---------- Brand accents ---------- */
+  --vy-blue:         #2F2BFF;   /* "electric iris" — primary brand */
+  --vy-blue-bright:  #4B47FF;   /* hover / link */
+  --vy-blue-deep:    #1B1A8F;   /* pressed / shadow */
+  --vy-blue-soft:    #8C8AFF;   /* ocean-bright, used for section eyebrows */
+
+  --vy-acid:         #C8FA3C;   /* "acid green" / "starship" — CTA */
+  --vy-jade:         #A6CFB8;
+  --vy-green-glow:   #2E5E3F;
+
+  --vy-magenta:      #E255A6;
+  --vy-ember:        #E2683C;
+
+  /* ---------- Text on dark ---------- */
+  --vy-fg:           #FFFFFF;
+  --vy-fg-dim:       rgba(255,255,255,.55);
+  --vy-fg-dimmer:    rgba(255,255,255,.34);
+  --vy-fg-faint:     rgba(255,255,255,.20);
+
+  /* ---------- Borders / hairlines ---------- */
+  --vy-hair:         rgba(255,255,255,.10);
+  --vy-hair-strong:  rgba(255,255,255,.18);
+  --vy-hair-soft:    rgba(255,255,255,.06);
+
+  /* ---------- Radii ---------- */
+  --vy-r-sm: 8px;
+  --vy-r-md: 16px;
+  --vy-r-lg: 24px;
+  --vy-r-xl: 30px;       /* card radius */
+  --vy-r-pill: 999px;    /* pills, CTAs */
+
+  /* ---------- Shadows / glows ---------- */
+  --vy-glow-acid: 0 0 30px rgba(231, 254, 85, .30);
+  --vy-glow-acid-hover: 0 0 44px rgba(231, 254, 85, .50);
+  --vy-glow-blue: 0 0 0 3px rgba(47, 43, 255, .25);
+  --vy-shadow-card: 0 40px 120px rgba(0, 0, 0, .70);
+
+  /* ---------- Spacing scale (8pt-ish) ---------- */
+  --vy-s-1: 4px;
+  --vy-s-2: 8px;
+  --vy-s-3: 12px;
+  --vy-s-4: 16px;
+  --vy-s-5: 22px;
+  --vy-s-6: 30px;
+  --vy-s-7: 40px;
+  --vy-s-8: 60px;
+
+  /* ---------- Type families ---------- */
+  --vy-font-display: "Bebas Neue", "Impact", sans-serif;
+  --vy-font-sans:    "Hanken Grotesk", system-ui, sans-serif;
+  --vy-font-mono:    "Space Mono", "JetBrains Mono", monospace;
+
+  /* ---------- Type tokens ---------- */
+  --vy-tracking-display: .04em;
+  --vy-tracking-wordmark: .18em;
+  --vy-tracking-mono:    .12em;   /* uppercase labels */
+  --vy-tracking-button:  .08em;
+}
+
+/* ============================================================
+   Semantic typography
+   Bebas Neue is ALL CAPS by nature; we still apply text-transform
+   on h1/h2 for safety, and uppercase + track all mono labels.
+   ============================================================ */
+
+.vy-wordmark {
+  font-family: var(--vy-font-display);
+  font-size: 30px;
+  letter-spacing: var(--vy-tracking-wordmark);
+  color: var(--vy-blue);
+  line-height: 1;
+}
+
+.vy-h1, h1.vy {
+  font-family: var(--vy-font-display);
+  font-size: 64px;
+  line-height: .9;
+  letter-spacing: var(--vy-tracking-display);
+  color: var(--vy-fg);
+  text-transform: uppercase;
+}
+
+.vy-h2, h2.vy {
+  font-family: var(--vy-font-display);
+  font-size: 44px;
+  line-height: .95;
+  letter-spacing: var(--vy-tracking-display);
+  color: var(--vy-fg);
+  text-transform: uppercase;
+}
+
+.vy-h3, h3.vy {
+  font-family: var(--vy-font-sans);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: var(--vy-fg);
+}
+
+.vy-body, p.vy {
+  font-family: var(--vy-font-sans);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--vy-fg);
+  line-height: 1.45;
+}
+
+.vy-cell {
+  font-family: var(--vy-font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: rgba(255,255,255,.82);
+}
+
+.vy-sub {
+  /* Page subtitle / eyebrow under display headings */
+  font-family: var(--vy-font-mono);
+  font-size: 13px;
+  letter-spacing: var(--vy-tracking-mono);
+  color: var(--vy-fg-dim);
+  text-transform: uppercase;
+}
+
+.vy-eyebrow {
+  /* Section eyebrows inside forms (blue) */
+  font-family: var(--vy-font-mono);
+  font-size: 13px;
+  letter-spacing: var(--vy-tracking-mono);
+  color: var(--vy-blue-soft);
+  text-transform: uppercase;
+}
+
+.vy-label {
+  /* Field labels (above inputs) */
+  font-family: var(--vy-font-mono);
+  font-size: 11px;
+  letter-spacing: .10em;
+  color: var(--vy-fg-dim);
+  text-transform: uppercase;
+}
+
+.vy-button-text,
+.vy-tag {
+  font-family: var(--vy-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--vy-tracking-button);
+  text-transform: uppercase;
+}
+
+.vy-mono {
+  font-family: var(--vy-font-mono);
+}
