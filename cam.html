@@ -103,9 +103,15 @@
     /* preset chips */
     .chips {
       display: flex; gap: 6px;
+      justify-content: center;            /* center the group on wide screens */
       overflow-x: auto;
-      padding: 2px;
+      padding: 2px 16px;                  /* edge breathing room before scroll kicks in */
       scrollbar-width: none;
+    }
+    /* on narrow viewports where the chips overflow, the centered-flex pattern can
+       hide left edge — push to start so the scroll works naturally */
+    @media (max-width: 760px) {
+      .chips { justify-content: flex-start; }
     }
     .chips::-webkit-scrollbar { display: none; }
     .chip {
