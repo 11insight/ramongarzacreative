@@ -721,15 +721,17 @@ body.cam-fs-open { overflow: hidden; }    /* lock background scroll while popup 
 }
 
 /* Hidden raw video source — the canvas below is what's actually shown. */
-/* Hidden video source — must have REAL layout dimensions (not 1×1) or iOS Safari
-   throttles it and never delivers frames to drawImage, which produces black photos.
-   Opacity:0 keeps it invisible; the canvas above paints the processed feed. */
+/* Video source — visible and mirrored, the canvas on z-index:2 paints OVER it
+   with the processed frame. Kept visible (no opacity:0) because iOS Safari is
+   unreliable about delivering frames from invisible videos. If the canvas paint
+   ever lags or fails, the raw video below is a graceful fallback rather than black. */
 .cam-video-source {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
   object-fit: cover;
-  opacity: 0;
+  transform: scaleX(-1);     /* mirror to match the canvas selfie mirror */
   pointer-events: none;
+  background: #0a0a0c;
 }
 
 /* Live filmcam canvas — every preset is rendered into THIS element every frame,

@@ -663,19 +663,50 @@ function Super8Cam() {
     return () => clearInterval(i);
   }, [stream]);
 
+  // attach the MediaStream to the <video> AFTER it has mounted.
+  // setStream() inside start() schedules a React render — videoRef.current is
+  // still null at that point, so doing srcObject in start() silently no-ops.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!stream || !v) return;
+    v.srcObject = stream;
+    // ignore play() errors — iOS sometimes throws "AbortError" on rapid mount/unmount
+    v.play().catch(() => {});
+  }, [stream]);
+
   // live render loop — draws video into the canvas with the active preset every frame.
   // The canvas IS the preview AND the captured photo (WYSIWYG).
+  // Prefer requestVideoFrameCallback (fires on actual decoded frames) and fall
+  // back to requestAnimationFrame on browsers that don't support it.
   useEffect(() => {
     if (!stream || !canvasRef.current || !videoRef.current) return;
-    const ctx = canvasRef.current.getContext("2d");
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    const video = videoRef.current;
     let active = true;
-    const tick = () => {
+    let rafId = 0;
+    let vfcId = 0;
+
+    const paint = () => {
       if (!active) return;
-      drawPreset(ctx, tmpRef.current, videoRef.current, preset, CAM_W, CAM_H, grainRef.current);
-      rafRef.current = requestAnimationFrame(tick);
+      drawPreset(ctx, tmpRef.current, video, preset, CAM_W, CAM_H, grainRef.current);
     };
-    tick();
-    return () => { active = false; cancelAnimationFrame(rafRef.current); };
+
+    if (typeof video.requestVideoFrameCallback === "function") {
+      const vfcLoop = () => { if (!active) return; paint(); vfcId = video.requestVideoFrameCallback(vfcLoop); };
+      vfcId = video.requestVideoFrameCallback(vfcLoop);
+    } else {
+      const rafLoop = () => { if (!active) return; paint(); rafId = requestAnimationFrame(rafLoop); };
+      rafLoop();
+    }
+
+    return () => {
+      active = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (vfcId && video.cancelVideoFrameCallback) {
+        try { video.cancelVideoFrameCallback(vfcId); } catch {}
+      }
+    };
   }, [stream, presetIx]);
 
   const start = async () => {
@@ -687,10 +718,7 @@ function Super8Cam() {
       });
       setStream(s);
       setFullscreen(true);                     // pop into the fullscreen phone view
-      if (videoRef.current) {
-        videoRef.current.srcObject = s;
-        await videoRef.current.play();
-      }
+      // srcObject + play() are wired up in the useEffect above, after <video> mounts
     } catch (e) {
       setErr(e.name === "NotAllowedError"
         ? "Camera access denied — allow in browser settings"
