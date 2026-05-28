@@ -16,6 +16,19 @@ html, body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  /* kill iOS Safari's text-selection / magnifier / tap-flash on decorative copy.
+     form inputs and contact info re-enable it below. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* re-enable selection on things people actually need to interact with as text */
+input, textarea, [contenteditable],
+.contact-info, .contact-info * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 
 body {
@@ -137,7 +150,8 @@ img { display: block; max-width: 100%; }
    ========================================================= */
 section.scene {
   position: relative;
-  z-index: 1;            /* lift content above the .film-lines scratch overlay */
+  z-index: 2;                  /* sit above the .film-lines scratch overlay */
+  isolation: isolate;          /* force a stacking context so the blend-mode lines can't leak through (iOS Safari) */
   padding: 120px 6vw;
   min-height: 100vh;
   display: flex;
@@ -2362,9 +2376,34 @@ h2.section-title em {
   .dymo-label { font-size: 11px; }
 
   /* ───── Lightbox ───── */
-  .lightbox img { max-width: 96vw; max-height: 80vh; }
-  .lb-close { top: max(env(safe-area-inset-top), 14px); right: 14px; font-size: 11px; }
-  .lb-meta { font-size: 10px; padding: 0 14px max(env(safe-area-inset-bottom), 18px); text-align: center; }
+  .lightbox {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;     /* center the whole image+meta group vertically */
+    align-items: center;
+    gap: 14px;
+    padding:
+      max(env(safe-area-inset-top), 44px)
+      4vw
+      max(env(safe-area-inset-bottom), 44px);
+  }
+  .lightbox img {
+    max-width: 92vw;
+    max-height: 72vh;            /* leaves room for meta + close button */
+    margin: 0 auto;
+  }
+  .lb-close {
+    top: max(env(safe-area-inset-top), 14px);
+    right: 14px;
+    font-size: 11px;
+  }
+  .lb-meta {
+    position: static;            /* sit just under the image inside the flex column */
+    bottom: auto; left: auto; right: auto;
+    font-size: 10px;
+    text-align: center;
+    padding: 0 14px;
+  }
 
   /* misc tap targets */
   button, .cam-shutter-btn, .cam-btn, .btn-acid { min-height: 44px; }
