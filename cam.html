@@ -514,59 +514,60 @@
     let G = Math.pow(g, 2.2);
     let B = Math.pow(b, 2.2);
 
-    // tungsten WB push — strong cool cast (signature CineStill look in daylight)
-    R *= 0.78;
-    G *= 0.94;
-    B *= 1.32;
+    // VERY strong tungsten WB push — full cinematic cool/teal cast
+    R *= 0.62;
+    G *= 0.88;
+    B *= 1.55;
 
-    // lift shadows hard with magenta-cyan cast (the famous milky CineStill blacks)
-    const lift = 0.085;
-    R = R * (1 - lift) + lift * 0.72;
-    G = G * (1 - lift) + lift * 0.70;
-    B = B * (1 - lift) + lift * 1.05;
+    // hard shadow lift with deep magenta-cyan cast (signature CineStill milky blacks)
+    const lift = 0.14;
+    R = R * (1 - lift) + lift * 0.70;
+    G = G * (1 - lift) + lift * 0.66;
+    B = B * (1 - lift) + lift * 1.12;
 
-    // strong highlight roll-off + warmth in the top end
-    R = R / (1 + 0.22 * R);
-    G = G / (1 + 0.28 * G);
-    B = B / (1 + 0.40 * B);
+    // very aggressive highlight roll-off — protects whites, deep shoulder
+    R = R / (1 + 0.30 * R);
+    G = G / (1 + 0.38 * G);
+    B = B / (1 + 0.55 * B);
 
-    // pronounced highlight warmth (tungsten)
+    // pronounced highlight warmth (tungsten film responds warm in the top end)
     const lum = R * 0.299 + G * 0.587 + B * 0.114;
-    if (lum > 0.45) {
-      const t = (lum - 0.45) * 1.8;
-      R += t * 0.18;
-      G += t * 0.06;
-      B -= t * 0.08;
+    if (lum > 0.40) {
+      const t = (lum - 0.40) * 2.0;
+      R += t * 0.30;
+      G += t * 0.10;
+      B -= t * 0.14;
     }
 
-    // shadow cool push (cinematic teal-orange split)
-    if (lum < 0.35) {
-      const t = (0.35 - lum) * 1.5;
-      R -= t * 0.04;
-      B += t * 0.10;
+    // strong shadow cool push (cinematic teal-orange split)
+    if (lum < 0.40) {
+      const t = (0.40 - lum) * 2.0;
+      R -= t * 0.08;
+      G -= t * 0.02;
+      B += t * 0.18;
     }
 
-    // contrast bump
-    R = (R - 0.18) * 1.22 + 0.18;
-    G = (G - 0.18) * 1.22 + 0.18;
-    B = (B - 0.18) * 1.18 + 0.18;
+    // big contrast bump
+    R = (R - 0.18) * 1.38 + 0.18;
+    G = (G - 0.18) * 1.38 + 0.18;
+    B = (B - 0.18) * 1.30 + 0.18;
 
-    // slight desaturation of midtones (cinematic look)
+    // midtone desaturation (cinematic feel)
     const mid = (R + G + B) / 3;
-    R = R * 0.92 + mid * 0.08;
-    G = G * 0.92 + mid * 0.08;
-    B = B * 0.92 + mid * 0.08;
+    R = R * 0.85 + mid * 0.15;
+    G = G * 0.85 + mid * 0.15;
+    B = B * 0.85 + mid * 0.15;
 
     // back to sRGB
     R = Math.pow(Math.max(0, Math.min(1, R)), 1 / 2.2);
     G = Math.pow(Math.max(0, Math.min(1, G)), 1 / 2.2);
     B = Math.pow(Math.max(0, Math.min(1, B)), 1 / 2.2);
 
-    // film-base bias (slight warm undertone in highlights, cool in shadows)
+    // film-base bias (cool/teal undertone)
     return [
-      Math.max(0, Math.min(1, R * 1.025)),
+      Math.max(0, Math.min(1, R * 1.04)),
       Math.max(0, Math.min(1, G * 1.00)),
-      Math.max(0, Math.min(1, B * 0.96))
+      Math.max(0, Math.min(1, B * 0.94))
     ];
   }
 
@@ -633,6 +634,10 @@ vec3 sampleLut(vec3 color){
   return mix(c0, c1, bf);
 }
 
+float hash21(vec2 p){
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
 void main(){
   vec2 uv = v_uv;
   if (u_mirror > 0.5) uv.x = 1.0 - uv.x;
@@ -641,30 +646,46 @@ void main(){
   // 1. LUT color grade
   vec3 graded = sampleLut(src);
 
-  // 2. CineStill halation: a TWO-ring 16-tap sample of bright neighbors at
-  //    different radii, blended into a wide warm red bloom around highlights.
+  // 2. Halation: two-ring 16-tap bright-neighbor sample → warm-red bloom
   float hl = 0.0;
   for (int i = 0; i < 8; i++) {
     float a = float(i) / 8.0 * 6.2831853;
-    // inner ring (tight bright pickup)
-    vec2 o1 = vec2(cos(a), sin(a)) * 0.012;
+    vec2 o1 = vec2(cos(a), sin(a)) * 0.014;
     float l1 = dot(texture(u_video, uv + o1).rgb, vec3(0.2126, 0.7152, 0.0722));
-    hl += smoothstep(0.65, 0.95, l1);
-    // outer ring (wide halo spread)
-    vec2 o2 = vec2(cos(a + 0.39), sin(a + 0.39)) * 0.028;
+    hl += smoothstep(0.60, 0.95, l1);
+    vec2 o2 = vec2(cos(a + 0.39), sin(a + 0.39)) * 0.034;
     float l2 = dot(texture(u_video, uv + o2).rgb, vec3(0.2126, 0.7152, 0.0722));
-    hl += smoothstep(0.70, 1.00, l2) * 0.75;
+    hl += smoothstep(0.65, 1.00, l2) * 0.8;
   }
   hl /= 14.0;
   float lLocal = dot(src, vec3(0.2126, 0.7152, 0.0722));
-  hl = max(hl, smoothstep(0.72, 1.00, lLocal));
+  hl = max(hl, smoothstep(0.70, 1.00, lLocal));
+  vec3 halo = vec3(1.0, 0.28, 0.14) * hl * u_halo * 2.0;
 
-  // bigger, warmer halation lobe
-  vec3 halo = vec3(1.0, 0.28, 0.14) * hl * u_halo * 1.6;
-  // screen blend the halation onto the graded image
-  vec3 result = 1.0 - (1.0 - graded) * (1.0 - halo);
+  // 3. Anamorphic horizontal streak — a soft blue band across the upper third,
+  //    much brighter where source highlights live (J.J. Abrams flare echo)
+  float bandY = 0.32;
+  float bandWidth = 0.05;
+  float band = exp(-pow((uv.y - bandY) / bandWidth, 2.0));
+  vec3 streak = vec3(0.55, 0.82, 1.0) * band * (0.25 + hl * 1.8) * 0.6;
 
-  outColor = vec4(result, 1.0);
+  // 4. Cool-tinted vignette pulling focus to center
+  vec2 toCenter = (uv - 0.5) * vec2(0.9, 1.0);
+  float vd = length(toCenter);
+  float vig = smoothstep(0.85, 0.30, vd);    // 1 at center → 0 at edges
+  vec3 vigTint = vec3(0.04, 0.05, 0.12);     // edges tinted toward cool
+
+  // 5. Film grain — per-pixel pseudo-noise, subtle
+  float grain = hash21(uv * 1000.0) - 0.5;
+  vec3 grainV = vec3(grain) * 0.06;
+
+  // composite: graded × vignette + halation + anamorphic streak + grain
+  vec3 result = graded * vig + vigTint * (1.0 - vig);
+  result = 1.0 - (1.0 - result) * (1.0 - halo);       // screen halation
+  result = 1.0 - (1.0 - result) * (1.0 - streak);     // screen streak
+  result += grainV;
+
+  outColor = vec4(clamp(result, 0.0, 1.0), 1.0);
 }`;
 
   /* ---------- WebGL2 pipeline ---------- */
