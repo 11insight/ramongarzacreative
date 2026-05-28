@@ -413,35 +413,76 @@ const PRESETS = [
   {
     id: "super8",
     name: "Super-8",
-    sub: "Warm · light leaks",
-    stock: "Ektachrome 100D",
+    sub: "Dream · anamorphic",
+    stock: "Super 8mm",
     wb: "5600 K",
-    filter: "saturate(1.10) contrast(1.12) brightness(1.04) sepia(.14)",
+    halate: true,
+    filter: "saturate(1.25) contrast(1.34) brightness(.96) sepia(.20) hue-rotate(-4deg)",
     overlay(ctx, W, H, grain) {
+      ctx.globalCompositeOperation = "soft-light";
+      const grade = ctx.createLinearGradient(0, 0, 0, H);
+      grade.addColorStop(0,   "rgba(255,170,100,.30)");
+      grade.addColorStop(.50, "rgba(40,80,130,.18)");
+      grade.addColorStop(1,   "rgba(20,60,100,.32)");
+      ctx.fillStyle = grade; ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = "screen";
-      const tl = ctx.createRadialGradient(W * 0.15, H * 0.08, 0, W * 0.15, H * 0.08, W * 0.85);
-      tl.addColorStop(0, "rgba(255,140,60,0.42)");
-      tl.addColorStop(0.30, "rgba(255,100,40,0.16)");
-      tl.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = tl; ctx.fillRect(0, 0, W, H);
-      const br = ctx.createRadialGradient(W * 0.95, H * 0.95, 0, W * 0.95, H * 0.95, W * 0.9);
-      br.addColorStop(0, "rgba(255,180,100,0.32)");
-      br.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = br; ctx.fillRect(0, 0, W, H);
-      const fy = H * 0.36;
-      const fl = ctx.createLinearGradient(0, fy, W, fy);
-      fl.addColorStop(0,    "rgba(120,200,255,0)");
-      fl.addColorStop(0.45, "rgba(190,235,255,0.55)");
-      fl.addColorStop(0.62, "rgba(220,245,255,0.50)");
-      fl.addColorStop(1,    "rgba(120,200,255,0)");
-      ctx.fillStyle = fl; ctx.fillRect(0, fy - 5, W, 10);
+      const lk1 = ctx.createRadialGradient(W*.10, H*.10, 0, W*.10, H*.10, W*1.0);
+      lk1.addColorStop(0, "rgba(255,140,60,.72)");
+      lk1.addColorStop(.18, "rgba(255,100,40,.40)");
+      lk1.addColorStop(.50, "rgba(200,80,30,.10)");
+      lk1.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = lk1; ctx.fillRect(0, 0, W, H);
+      const lk2 = ctx.createRadialGradient(W*.95, H*.95, 0, W*.95, H*.95, W*.9);
+      lk2.addColorStop(0, "rgba(255,170,90,.58)");
+      lk2.addColorStop(.40, "rgba(255,120,60,.18)");
+      lk2.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = lk2; ctx.fillRect(0, 0, W, H);
+      const fy1 = H * 0.32;
+      const f1 = ctx.createLinearGradient(0, fy1, W, fy1);
+      f1.addColorStop(0, "rgba(80,180,255,0)");
+      f1.addColorStop(.15, "rgba(150,210,255,.50)");
+      f1.addColorStop(.40, "rgba(210,240,255,.95)");
+      f1.addColorStop(.60, "rgba(230,248,255,1)");
+      f1.addColorStop(.85, "rgba(150,210,255,.50)");
+      f1.addColorStop(1, "rgba(80,180,255,0)");
+      ctx.fillStyle = f1; ctx.fillRect(0, fy1 - 16, W, 32);
+      const orb = ctx.createRadialGradient(W*.50, fy1, 0, W*.50, fy1, W*.42);
+      orb.addColorStop(0, "rgba(230,245,255,.95)");
+      orb.addColorStop(.20, "rgba(180,220,255,.58)");
+      orb.addColorStop(.55, "rgba(120,180,240,.16)");
+      orb.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = orb; ctx.fillRect(0, fy1 - W*.42, W, W*.84);
+      const fy2 = H * 0.58;
+      const f2 = ctx.createLinearGradient(0, fy2, W, fy2);
+      f2.addColorStop(0, "rgba(80,180,255,0)");
+      f2.addColorStop(.20, "rgba(130,200,255,.34)");
+      f2.addColorStop(.50, "rgba(200,230,255,.78)");
+      f2.addColorStop(.80, "rgba(130,200,255,.34)");
+      f2.addColorStop(1, "rgba(80,180,255,0)");
+      ctx.fillStyle = f2; ctx.fillRect(0, fy2 - 10, W, 20);
+      const fy3 = H * 0.78;
+      const f3 = ctx.createLinearGradient(0, fy3, W, fy3);
+      f3.addColorStop(0, "rgba(100,180,255,0)");
+      f3.addColorStop(.5, "rgba(195,230,255,.58)");
+      f3.addColorStop(1, "rgba(100,180,255,0)");
+      ctx.fillStyle = f3; ctx.fillRect(0, fy3 - 5, W, 10);
+      const g1 = ctx.createRadialGradient(W*.15, H*.45, 0, W*.15, H*.45, W*.18);
+      g1.addColorStop(0, "rgba(180,220,255,.50)");
+      g1.addColorStop(.6, "rgba(180,220,255,.10)");
+      g1.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g1; ctx.fillRect(0, H*.30, W*.36, W*.36);
+      const g2 = ctx.createRadialGradient(W*.85, H*.48, 0, W*.85, H*.48, W*.16);
+      g2.addColorStop(0, "rgba(255,200,150,.46)");
+      g2.addColorStop(.6, "rgba(255,200,150,.10)");
+      g2.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g2; ctx.fillRect(W*.69, H*.32, W*.32, W*.32);
       ctx.globalCompositeOperation = "source-over";
-      const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.32, W / 2, H / 2, Math.max(W, H) * 0.72);
+      const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*.28, W/2, H/2, Math.max(W,H)*.72);
       vg.addColorStop(0, "rgba(0,0,0,0)");
-      vg.addColorStop(0.7, "rgba(0,0,0,0.30)");
-      vg.addColorStop(1, "rgba(0,0,0,0.85)");
+      vg.addColorStop(.55, "rgba(0,8,30,.36)");
+      vg.addColorStop(1, "rgba(0,5,25,.92)");
       ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-      drawGrain(ctx, W, H, grain, 0.20);
+      drawGrain(ctx, W, H, grain, .28);
     }
   },
   {
@@ -828,10 +869,6 @@ function Super8Cam() {
       </div>
       <div className="section-head">
         <h2 className="section-title">Live<em>cam</em></h2>
-        <div className="meta">
-          {preset.name} · {preset.sub}<br/>
-          WYSIWYG · the canvas is the photo.
-        </div>
       </div>
 
       <div className={`cam-stage no-frame ${fullscreen ? "fullscreen" : ""}`}>
