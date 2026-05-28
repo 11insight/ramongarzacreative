@@ -1465,11 +1465,13 @@ body.cam-fs-open { overflow: hidden; }    /* lock background scroll while popup 
   .lens-flare::before, .lens-flare::after { animation: none; }
 }
 
-/* clicking the Patch Bay label flies the whole flare (orbs keep spinning) off to the right */
-.lens-flare.eject { animation: lf-fly 1.5s cubic-bezier(.5, 0, .85, .35) forwards; }
+/* clicking the Patch Bay label sends the flare (orbs keep spinning) on a J-shaped
+   path — first up past the patch label, then right off-screen. */
+.lens-flare.eject { animation: lf-fly 1.8s cubic-bezier(.42, 0, .58, 1) forwards; }
 @keyframes lf-fly {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(125vw); }
+  0%   { transform: translate(0, 0); }
+  38%  { transform: translate(32vw, -58vh); }   /* arc up past the Patch Bay · Comms label */
+  100% { transform: translate(130vw, -58vh); }  /* then shoot right off the screen */
 }
 /* …then 5s after the click the orbs fade back into the bottom-left corner */
 .lens-flare.returning { animation: lf-return .85s ease both; }
