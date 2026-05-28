@@ -160,16 +160,17 @@
       width: 78px; height: 78px;
       border-radius: 50%;
       background: #c8fa3c;
-      border: 6px solid #fff;
-      box-shadow: 0 0 24px rgba(200,250,60,.55);
+      border: 0;
+      box-shadow: 0 0 30px rgba(200,250,60,.75), 0 0 0 4px rgba(200,250,60,.20);
       transition: transform .08s ease, box-shadow .15s ease;
     }
     .shutter:active {
       transform: scale(.94);
-      box-shadow: 0 0 36px rgba(200,250,60,.85);
+      box-shadow: 0 0 44px rgba(200,250,60,.95), 0 0 0 6px rgba(200,250,60,.28);
     }
     .shutter[disabled] {
-      background: rgba(120,120,120,.6); border-color: rgba(255,255,255,.35); box-shadow: none;
+      background: rgba(120,120,120,.55);
+      box-shadow: none;
     }
 
     /* flash overlay */
@@ -264,6 +265,119 @@
       z-index: 6;
     }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---------- album modal ---------- */
+    .album, .detail {
+      position: fixed; inset: 0;
+      background: #000;
+      z-index: 10;
+      display: none;
+      flex-direction: column;
+    }
+    .album.open, .detail.open { display: flex; }
+    .album-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      padding:
+        max(env(safe-area-inset-top), 14px)
+        16px 12px 16px;
+      background: linear-gradient(to bottom, rgba(0,0,0,.7), rgba(0,0,0,0));
+    }
+    .album-title {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      letter-spacing: .14em; font-size: 20px;
+    }
+    .album-title em {
+      font-family: "Space Mono", monospace;
+      font-size: 11px; letter-spacing: .14em;
+      color: #c8fa3c; font-style: normal;
+      margin-left: 6px;
+    }
+    .album-pad { width: 38px; }
+    .album-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 6px 14px max(env(safe-area-inset-bottom), 14px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .album-tile {
+      aspect-ratio: 9 / 19.5;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #0a0a0c;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,.08);
+      transition: border-color .15s ease, transform .08s ease;
+    }
+    .album-tile:active { transform: scale(.98); }
+    .album-tile:hover { border-color: rgba(200,250,60,.35); }
+    .album-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .album-tile .tag {
+      position: absolute; left: 8px; bottom: 8px;
+      font-family: "Space Mono", monospace;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      background: rgba(0,0,0,.6); padding: 3px 7px; border-radius: 4px;
+      color: #c8fa3c;
+      backdrop-filter: blur(4px);
+    }
+    .album-empty {
+      margin: auto;
+      font-family: "Space Mono", monospace;
+      font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+      padding: 30px;
+      text-align: center;
+    }
+    .album.has-shots .album-empty { display: none; }
+    .album:not(.has-shots) .album-grid { display: none; }
+
+    /* ---------- detail (single-photo view inside album) ---------- */
+    .detail { z-index: 11; }
+    .detail-top {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: max(env(safe-area-inset-top), 14px) 16px 8px;
+      gap: 12px;
+    }
+    .detail-meta {
+      font-family: "Space Mono", monospace;
+      font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.7);
+    }
+    .detail-meta strong { color: #c8fa3c; font-weight: 400; }
+    .detail-img-wrap {
+      flex: 1;
+      display: grid; place-items: center;
+      padding: 8px 14px;
+      overflow: hidden;
+    }
+    .detail-img-wrap img {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+    .detail-bar {
+      display: flex; justify-content: center; gap: 12px;
+      padding: 12px 16px max(env(safe-area-inset-bottom), 18px);
+    }
+    .detail-btn {
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: #c8fa3c; color: #000;
+      font-family: "Space Mono", monospace;
+      font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+      box-shadow: 0 0 24px rgba(200,250,60,.55);
+    }
+    .detail-btn:active { transform: scale(.97); }
+    .detail-btn.ghost {
+      background: rgba(20,20,20,.7);
+      color: var(--vy-fg, #fff);
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: none;
+    }
   </style>
 </head>
 <body>
@@ -299,6 +413,31 @@
     </footer>
 
     <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- album of session shots -->
+  <div class="album" id="album" aria-hidden="true">
+    <header class="album-bar">
+      <button class="top-btn" id="albumClose" aria-label="Close album">✕</button>
+      <span class="album-title">Album<em><span id="albumCount">0</span> shots</em></span>
+      <span class="album-pad"></span>
+    </header>
+    <div class="album-empty" id="albumEmpty">No shots yet. Tap the shutter to fill the album.</div>
+    <div class="album-grid" id="albumGrid"></div>
+  </div>
+
+  <!-- single-photo detail view (opens from album) -->
+  <div class="detail" id="detail" aria-hidden="true">
+    <div class="detail-top">
+      <button class="top-btn" id="detailClose" aria-label="Back to album">←</button>
+      <span class="detail-meta"><strong id="detailPreset">Super-8</strong> · <span id="detailTime"></span></span>
+      <span class="album-pad"></span>
+    </div>
+    <div class="detail-img-wrap"><img id="detailImg" alt="captured photo" /></div>
+    <div class="detail-bar">
+      <button class="detail-btn ghost" id="detailDownload">↓ Download</button>
+      <button class="detail-btn" id="detailShare">↑ Share / Save</button>
+    </div>
   </div>
 
   <script>
@@ -423,11 +562,26 @@
     ctx.globalCompositeOperation = "source-over";
   }
 
-  const tmpCanvas = document.createElement("canvas");
-  tmpCanvas.width = CAM_W; tmpCanvas.height = CAM_H;
+  // Live preview = raw mirrored/cover-fit video. NO filter, NO overlays.
+  // (The selected preset is applied only when you snap, not in the viewfinder,
+  // so framing is clean and matches what you see is what you get for COMPOSITION.)
+  function drawLive(ctx, video, W, H) {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) return;
+    const scale = Math.max(W / vw, H / vh);
+    const dw = vw * scale, dh = vh * scale;
+    const dx = (W - dw) / 2, dy = (H - dh) / 2;
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+    if (facingMode === "user") { ctx.translate(W, 0); ctx.scale(-1, 1); ctx.drawImage(video, W - dx - dw, dy, dw, dh); }
+    else { ctx.drawImage(video, dx, dy, dw, dh); }
+    ctx.restore();
+  }
 
-  function drawPreset(ctx, video, preset) {
-    const W = CAM_W, H = CAM_H;
+  // applyPreset = the full Super-8/Ektachrome/Noir/VHS/CineStill pipeline.
+  // Called only when the shutter fires, on a fresh higher-resolution canvas
+  // so saved photos look crisp.
+  function applyPreset(ctx, tmp, video, preset, W, H) {
     const vw = video.videoWidth, vh = video.videoHeight;
     if (!vw || !vh) return;
     const scale = Math.max(W / vw, H / vh);
@@ -440,9 +594,9 @@
     ctx.restore();
     ctx.filter = "none";
     if (preset.halate) {
-      const t = tmpCanvas.getContext("2d");
+      const t = tmp.getContext("2d");
       t.save();
-      t.clearRect(0,0,W,H);
+      t.clearRect(0, 0, W, H);
       t.filter = "blur(10px) brightness(1.55) saturate(2) sepia(.45) hue-rotate(-12deg)";
       if (facingMode === "user") { t.translate(W, 0); t.scale(-1, 1); t.drawImage(video, W - dx - dw, dy, dw, dh); }
       else { t.drawImage(video, dx, dy, dw, dh); }
@@ -451,7 +605,7 @@
       ctx.save();
       ctx.globalCompositeOperation = "screen";
       ctx.globalAlpha = .55;
-      ctx.drawImage(tmpCanvas, 0, 0);
+      ctx.drawImage(tmp, 0, 0);
       ctx.restore();
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
@@ -547,7 +701,7 @@
     active = true;
     const paint = () => {
       if (!active) return;
-      drawPreset(ctx, video, PRESETS[presetIx]);
+      drawLive(ctx, video, CAM_W, CAM_H);   // raw preview — preset only fires on snap
     };
     if (typeof video.requestVideoFrameCallback === "function") {
       const vfc = () => { if (!active) return; paint(); vfcId = video.requestVideoFrameCallback(vfc); };
@@ -587,15 +741,26 @@
     flashEl.classList.add("on");
   }
 
+  // Capture canvases — built at higher resolution so saved photos look crisp.
+  const CAP_W = 1080, CAP_H = 2340;             // ~3x the live preview, 9:19.5 portrait
+  const capCanvas = document.createElement("canvas");
+  capCanvas.width = CAP_W; capCanvas.height = CAP_H;
+  const capTmp = document.createElement("canvas");
+  capTmp.width = CAP_W; capTmp.height = CAP_H;
+
   async function capture() {
     if (!stream) return;
     flashOn();
-    const url = canvas.toDataURL("image/jpeg", 0.92);
-    const id = Date.now();
+    // build the filtered frame on the high-res capture canvas
+    const capCtx = capCanvas.getContext("2d");
     const preset = PRESETS[presetIx];
-    shots.unshift({ src: url, id, presetId: preset.id });
-    shots = shots.slice(0, 6);
-    thumbEl.innerHTML = '<img src="' + url + '" alt="last frame" />';
+    applyPreset(capCtx, capTmp, video, preset, CAP_W, CAP_H);
+    const url = capCanvas.toDataURL("image/jpeg", 0.92);
+    const id = Date.now();
+    shots.unshift({ src: url, id, presetId: preset.id, name: preset.name });
+    if (shots.length > 30) shots.length = 30;     // cap the in-memory album
+    renderThumb();
+    if (albumEl && albumEl.classList.contains("open")) renderAlbum();
     try {
       const blob = await (await fetch(url)).blob();
       const file = new File([blob], "RGC-" + preset.id + "-" + id + ".jpg", { type: "image/jpeg" });
@@ -607,7 +772,77 @@
         a.href = url; a.download = file.name; a.click();
         toast("Saved ✓");
       }
-    } catch (e) { /* user cancelled — frame still in thumb */ }
+    } catch (e) { /* user cancelled — frame still in album */ }
+  }
+
+  function renderThumb() {
+    if (!shots[0]) { thumbEl.textContent = "—"; return; }
+    thumbEl.innerHTML = '<img src="' + shots[0].src + '" alt="last frame" />';
+  }
+
+  /* ---------- album ---------- */
+  const albumEl       = document.getElementById("album");
+  const albumGrid     = document.getElementById("albumGrid");
+  const albumCount    = document.getElementById("albumCount");
+  const albumCloseBtn = document.getElementById("albumClose");
+  const detailEl      = document.getElementById("detail");
+  const detailImg     = document.getElementById("detailImg");
+  const detailPreset  = document.getElementById("detailPreset");
+  const detailTime    = document.getElementById("detailTime");
+  const detailCloseBtn = document.getElementById("detailClose");
+  const detailShare   = document.getElementById("detailShare");
+  const detailDownload = document.getElementById("detailDownload");
+  let detailShot = null;
+
+  function openAlbum() {
+    renderAlbum();
+    albumEl.classList.add("open");
+    albumEl.setAttribute("aria-hidden", "false");
+  }
+  function closeAlbum() {
+    albumEl.classList.remove("open");
+    albumEl.setAttribute("aria-hidden", "true");
+  }
+  function renderAlbum() {
+    albumGrid.innerHTML = "";
+    shots.forEach((s) => {
+      const tile = document.createElement("div");
+      tile.className = "album-tile";
+      tile.innerHTML =
+        '<img src="' + s.src + '" alt="' + s.name + ' photo" />' +
+        '<span class="tag">' + s.name + '</span>';
+      tile.addEventListener("click", () => openDetail(s));
+      albumGrid.appendChild(tile);
+    });
+    albumCount.textContent = String(shots.length);
+    albumEl.classList.toggle("has-shots", shots.length > 0);
+  }
+  function openDetail(s) {
+    detailShot = s;
+    detailImg.src = s.src;
+    detailPreset.textContent = s.name;
+    const d = new Date(s.id);
+    detailTime.textContent = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    detailEl.classList.add("open");
+    detailEl.setAttribute("aria-hidden", "false");
+  }
+  function closeDetail() {
+    detailEl.classList.remove("open");
+    detailEl.setAttribute("aria-hidden", "true");
+    detailShot = null;
+  }
+  async function shareShot(s) {
+    if (!s) return;
+    try {
+      const blob = await (await fetch(s.src)).blob();
+      const file = new File([blob], "RGC-" + s.presetId + "-" + s.id + ".jpg", { type: "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "RGC Filmcam" });
+      } else {
+        const a = document.createElement("a");
+        a.href = s.src; a.download = file.name; a.click();
+      }
+    } catch (e) { /* user cancelled */ }
   }
 
   /* ---------- events ---------- */
@@ -620,12 +855,22 @@
       await startCamera();
     }
   });
-  thumbEl.addEventListener("click", () => {
-    if (!shots[0]) return;
+  thumbEl.addEventListener("click", openAlbum);
+  albumCloseBtn.addEventListener("click", closeAlbum);
+  detailCloseBtn.addEventListener("click", closeDetail);
+  detailShare.addEventListener("click", () => shareShot(detailShot));
+  detailDownload.addEventListener("click", () => {
+    if (!detailShot) return;
     const a = document.createElement("a");
-    a.href = shots[0].src;
-    a.download = "RGC-" + shots[0].presetId + "-" + shots[0].id + ".jpg";
+    a.href = detailShot.src;
+    a.download = "RGC-" + detailShot.presetId + "-" + detailShot.id + ".jpg";
     a.click();
+  });
+  // Esc closes whichever modal is on top
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if (detailEl.classList.contains("open")) closeDetail();
+    else if (albumEl.classList.contains("open")) closeAlbum();
   });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && stream) stopCamera();
