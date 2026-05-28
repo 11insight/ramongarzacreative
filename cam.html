@@ -389,8 +389,9 @@
     </header>
 
     <div class="view" id="view">
+      <!-- video shown directly (no downsampling canvas overlay) so the viewfinder
+           stays sharp at native resolution. The preset is applied only at snap time. -->
       <video id="video" class="v-source" playsinline muted autoplay></video>
-      <canvas id="canvas" class="v-canvas" width="540" height="1170"></canvas>
       <div class="flash" id="flash"></div>
 
       <!-- permission / loading gate, shown until camera streams -->
@@ -622,8 +623,6 @@
   let tcStart = 0;
 
   const video    = document.getElementById("video");
-  const canvas   = document.getElementById("canvas");
-  const ctx      = canvas.getContext("2d");
   const gate     = document.getElementById("gate");
   const errMsg   = document.getElementById("errMsg");
   const startBtn = document.getElementById("startBtn");
@@ -680,7 +679,7 @@
       shutter.disabled = false;
       tcStart = Date.now();
       startTimecode();
-      startRenderLoop();
+      // no live render loop — the <video> shows directly at native resolution
     } catch (e) {
       errMsg.style.display = "block";
       errMsg.textContent = e && e.name === "NotAllowedError"
@@ -690,26 +689,8 @@
   }
 
   function stopCamera() {
-    active = false;
-    if (rafId) cancelAnimationFrame(rafId);
-    if (vfcId && video.cancelVideoFrameCallback) { try { video.cancelVideoFrameCallback(vfcId); } catch {} }
     if (stream) stream.getTracks().forEach(t => t.stop());
     stream = null;
-  }
-
-  function startRenderLoop() {
-    active = true;
-    const paint = () => {
-      if (!active) return;
-      drawLive(ctx, video, CAM_W, CAM_H);   // raw preview — preset only fires on snap
-    };
-    if (typeof video.requestVideoFrameCallback === "function") {
-      const vfc = () => { if (!active) return; paint(); vfcId = video.requestVideoFrameCallback(vfc); };
-      vfcId = video.requestVideoFrameCallback(vfc);
-    } else {
-      const raf = () => { if (!active) return; paint(); rafId = requestAnimationFrame(raf); };
-      raf();
-    }
   }
 
   let tcTimer = 0;
