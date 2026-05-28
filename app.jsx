@@ -805,10 +805,10 @@ function Super8Cam() {
                   <span className="cam-foot-lbl">RGC · {preset.name} · ISO {iso}</span>
                 </>
               ) : (
-                <div className="cam-off">
+                <a className="cam-off" href="/cam">
                   <div className="big">Cam</div>
-                  <div>Tap Roll Tape to grant<br/>camera access</div>
-                </div>
+                  <div>Tap to launch the<br/>RGC Filmcam — 5 presets</div>
+                </a>
               )}
               <div className={`shutter ${flash ? "flash" : ""}`} />
             </div>
@@ -845,20 +845,13 @@ function Super8Cam() {
           </div>
 
           <div className="cam-row">
-            {!stream ? (
-              <button className="cam-shutter-btn" onClick={start}>
-                <span className="ring" />
-                Roll Tape · Start Cam
-              </button>
-            ) : (
-              <>
-                <button className="cam-shutter-btn" onClick={snap}>
-                  <span className="ring" />
-                  Snap · {preset.name}
-                </button>
-                <button className="cam-btn ghost" onClick={stop}>✕ Cut</button>
-              </>
-            )}
+            {/* the actual camera lives at /cam — a dedicated full-viewport page
+                with no surrounding chrome, back camera by default, and a real
+                shutter. The inline section is now a launcher. */}
+            <a className="cam-shutter-btn" href="/cam">
+              <span className="ring" />
+              ▸ Open RGC Filmcam
+            </a>
           </div>
 
           {err && <div className="cam-error">⚠ {err}</div>}

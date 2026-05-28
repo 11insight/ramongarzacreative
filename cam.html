@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="robots" content="noindex" />
+  <title>RGC · Filmcam</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Hanken+Grotesk:wght@500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #000; color: #fff;
+      font-family: "Hanken Grotesk", system-ui, sans-serif;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ---------- stage ---------- */
+    .stage {
+      position: fixed; inset: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+
+    /* video + canvas fill the entire middle row */
+    .view {
+      position: relative;
+      overflow: hidden;
+      background: #0a0a0c;
+    }
+    .v-source {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .v-source.front { transform: scaleX(-1); }   /* mirror selfie cam */
+    .v-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 2;
+      display: block;
+    }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding:
+        max(env(safe-area-inset-top), 14px)
+        16px 12px 16px;
+      gap: 12px;
+      background: linear-gradient(to bottom, rgba(0,0,0,.6), rgba(0,0,0,0));
+      z-index: 4;
+    }
+    .brand {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      letter-spacing: .18em; font-size: 22px;
+    }
+    .brand sup { font-size: .45em; vertical-align: top; opacity: .7; }
+    .rec {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: "Space Mono", monospace;
+      font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.85);
+    }
+    .rec::before {
+      content: ""; width: 8px; height: 8px; border-radius: 50%;
+      background: #ff3344; box-shadow: 0 0 8px rgba(255,52,68,.7);
+      animation: rec-blink 1.4s steps(2) infinite;
+    }
+    @keyframes rec-blink { 50% { opacity: .35; } }
+    .top-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: rgba(20,20,20,.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.14);
+      display: grid; place-items: center;
+      font-size: 18px;
+    }
+    .top-btn:active { background: rgba(40,40,40,.8); }
+
+    /* ---------- bottom controls ---------- */
+    .bottom {
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 14px;
+      padding:
+        14px 16px
+        max(env(safe-area-inset-bottom), 14px) 16px;
+      background: linear-gradient(to top, rgba(0,0,0,.7), rgba(0,0,0,0));
+      z-index: 4;
+    }
+
+    /* preset chips */
+    .chips {
+      display: flex; gap: 6px;
+      overflow-x: auto;
+      padding: 2px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      display: grid; gap: 2px;
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      background: rgba(20,20,20,.55);
+      backdrop-filter: blur(6px);
+      color: rgba(255,255,255,.7);
+      transition: border-color .15s ease, color .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+    .chip .name {
+      font-family: "Hanken Grotesk", system-ui, sans-serif;
+      font-weight: 700; font-size: 12px; letter-spacing: .04em;
+    }
+    .chip .sub {
+      font-family: "Space Mono", monospace;
+      font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+    }
+    .chip.on {
+      color: #fff;
+      border-color: #c8fa3c;
+      background: rgba(200,250,60,.14);
+      box-shadow: 0 0 14px rgba(200,250,60,.30);
+    }
+    .chip.on .name { color: #c8fa3c; }
+
+    /* shutter row */
+    .shutter-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 14px;
+    }
+    .side {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: rgba(20,20,20,.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.16);
+      display: grid; place-items: center;
+      font-size: 20px;
+      justify-self: end;
+    }
+    .side.left { justify-self: start; }
+    .side:active { background: rgba(40,40,40,.85); }
+
+    .shutter {
+      width: 78px; height: 78px;
+      border-radius: 50%;
+      background: #c8fa3c;
+      border: 6px solid #fff;
+      box-shadow: 0 0 24px rgba(200,250,60,.55);
+      transition: transform .08s ease, box-shadow .15s ease;
+    }
+    .shutter:active {
+      transform: scale(.94);
+      box-shadow: 0 0 36px rgba(200,250,60,.85);
+    }
+    .shutter[disabled] {
+      background: rgba(120,120,120,.6); border-color: rgba(255,255,255,.35); box-shadow: none;
+    }
+
+    /* flash overlay */
+    .flash {
+      position: absolute; inset: 0;
+      background: #fff; opacity: 0;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .flash.on { animation: flash-pop .45s ease-out; }
+    @keyframes flash-pop {
+      0%   { opacity: 0; }
+      8%   { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    /* recent thumb */
+    .thumb {
+      width: 52px; height: 52px;
+      border-radius: 10px;
+      background: rgba(20,20,20,.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.16);
+      overflow: hidden;
+      justify-self: end;
+      display: grid; place-items: center;
+      color: rgba(255,255,255,.45);
+      font-family: "Space Mono", monospace; font-size: 10px;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* permission gate / errors */
+    .gate {
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      background: #000;
+      z-index: 5;
+      padding: 30px;
+      text-align: center;
+    }
+    .gate.hidden { display: none; }
+    .gate h1 {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: clamp(40px, 9vw, 84px);
+      letter-spacing: .04em;
+      margin-bottom: 12px;
+    }
+    .gate p {
+      font-family: "Space Mono", monospace;
+      font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.7);
+      max-width: 320px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
+    .gate .err {
+      color: #ff8a8a;
+      margin-bottom: 18px;
+    }
+    .gate button.primary {
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: #c8fa3c;
+      color: #000;
+      font-family: "Space Mono", monospace;
+      font-weight: 700; font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+      box-shadow: 0 0 28px rgba(200,250,60,.5);
+    }
+    .gate button.primary:active { transform: scale(.97); }
+    .gate .back-link {
+      display: block; margin-top: 18px;
+      font-family: "Space Mono", monospace;
+      font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+    }
+
+    /* toast for "shared"/"saved" */
+    .toast {
+      position: absolute; left: 50%;
+      bottom: calc(env(safe-area-inset-bottom) + 180px);
+      transform: translate(-50%, 12px);
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(10,10,10,.85);
+      border: 1px solid rgba(200,250,60,.45);
+      color: #c8fa3c;
+      font-family: "Space Mono", monospace;
+      font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+      opacity: 0;
+      transition: opacity .25s ease, transform .25s ease;
+      pointer-events: none;
+      z-index: 6;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <header class="topbar">
+      <a href="/" class="top-btn" aria-label="Back to RGC">←</a>
+      <span class="brand">RGC<sup>™</sup></span>
+      <span class="rec">REC · <span id="tc">00:00:00:00</span></span>
+    </header>
+
+    <div class="view" id="view">
+      <video id="video" class="v-source" playsinline muted autoplay></video>
+      <canvas id="canvas" class="v-canvas" width="540" height="1170"></canvas>
+      <div class="flash" id="flash"></div>
+
+      <!-- permission / loading gate, shown until camera streams -->
+      <div class="gate" id="gate">
+        <h1>Filmcam</h1>
+        <p id="gateMsg">5 film presets · WYSIWYG capture.<br/>Tap Start, then allow camera access.</p>
+        <p class="err" id="errMsg" style="display:none"></p>
+        <button class="primary" id="startBtn">▸ Start Camera</button>
+        <a class="back-link" href="/">← back to rgc</a>
+      </div>
+    </div>
+
+    <footer class="bottom">
+      <div class="chips" id="chips" role="radiogroup" aria-label="Film preset"></div>
+      <div class="shutter-row">
+        <button class="side left" id="flipBtn" aria-label="Flip camera">⇆</button>
+        <button class="shutter" id="shutter" aria-label="Capture photo" disabled></button>
+        <button class="thumb" id="thumb" aria-label="Last frame">06</button>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script>
+  /* =========================================================
+     RGC Filmcam — standalone full-viewport camera.
+     5 presets, WYSIWYG canvas, Web Share API capture, back-camera default.
+     ========================================================= */
+  const CAM_W = 540, CAM_H = 1170;
+
+  const PRESETS = [
+    {
+      id: "super8", name: "Super-8", sub: "Warm · leaks",
+      filter: "saturate(1.10) contrast(1.12) brightness(1.04) sepia(.14)",
+      overlay(ctx, W, H, grain) {
+        ctx.globalCompositeOperation = "screen";
+        const tl = ctx.createRadialGradient(W*.15, H*.08, 0, W*.15, H*.08, W*.85);
+        tl.addColorStop(0,"rgba(255,140,60,.42)"); tl.addColorStop(.30,"rgba(255,100,40,.16)"); tl.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle = tl; ctx.fillRect(0,0,W,H);
+        const br = ctx.createRadialGradient(W*.95, H*.95, 0, W*.95, H*.95, W*.9);
+        br.addColorStop(0,"rgba(255,180,100,.32)"); br.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle = br; ctx.fillRect(0,0,W,H);
+        const fy = H*.36;
+        const fl = ctx.createLinearGradient(0,fy,W,fy);
+        fl.addColorStop(0,"rgba(120,200,255,0)");
+        fl.addColorStop(.45,"rgba(190,235,255,.55)");
+        fl.addColorStop(.62,"rgba(220,245,255,.5)");
+        fl.addColorStop(1,"rgba(120,200,255,0)");
+        ctx.fillStyle = fl; ctx.fillRect(0, fy-5, W, 10);
+        ctx.globalCompositeOperation = "source-over";
+        vignette(ctx, W, H, .30, .85);
+        drawGrain(ctx, W, H, grain, .20);
+      }
+    },
+    {
+      id: "ektachrome", name: "Ektachrome", sub: "Vivid · daylight",
+      filter: "saturate(1.45) contrast(1.18) brightness(1.05) hue-rotate(-3deg)",
+      overlay(ctx, W, H, grain) {
+        ctx.globalCompositeOperation = "soft-light";
+        const t = ctx.createLinearGradient(0,0,0,H);
+        t.addColorStop(0,"rgba(180,220,255,.10)"); t.addColorStop(1,"rgba(255,180,200,.10)");
+        ctx.fillStyle = t; ctx.fillRect(0,0,W,H);
+        ctx.globalCompositeOperation = "source-over";
+        vignette(ctx, W, H, .55, .42);
+        drawGrain(ctx, W, H, grain, .08);
+      }
+    },
+    {
+      id: "noir", name: "Noir", sub: "B&W · contrast",
+      filter: "grayscale(1) contrast(1.45) brightness(.94)",
+      overlay(ctx, W, H, grain) {
+        vignette(ctx, W, H, .30, .95);
+        drawGrain(ctx, W, H, grain, .16);
+      }
+    },
+    {
+      id: "vhs", name: "VHS", sub: "Tape · chroma",
+      filter: "saturate(.85) contrast(1.05) brightness(1.04) blur(.3px)",
+      overlay(ctx, W, H, grain) {
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = "rgba(255,40,60,.10)";  ctx.fillRect(3, 0, W, H);
+        ctx.fillStyle = "rgba(60,170,255,.10)"; ctx.fillRect(-3, 0, W, H);
+        ctx.globalCompositeOperation = "multiply";
+        for (let y = 0; y < H; y += 3) { ctx.fillStyle = "rgba(0,0,0,.16)"; ctx.fillRect(0, y, W, 1); }
+        ctx.globalCompositeOperation = "source-over";
+        if (((Date.now() / 100) | 0) % 7 === 0) {
+          ctx.fillStyle = "rgba(255,255,255,.10)";
+          ctx.fillRect(0, Math.random() * H, W, 4);
+        }
+        drawGrain(ctx, W, H, grain, .13);
+      }
+    },
+    {
+      id: "cinestill", name: "CineStill", sub: "Halation · 800T",
+      filter: "saturate(1.20) contrast(1.08) brightness(1.02) hue-rotate(-7deg)",
+      halate: true,
+      overlay(ctx, W, H, grain) {
+        ctx.globalCompositeOperation = "soft-light";
+        const w = ctx.createLinearGradient(0,0,0,H);
+        w.addColorStop(0,"rgba(255,170,110,.12)"); w.addColorStop(1,"rgba(255,140,80,.08)");
+        ctx.fillStyle = w; ctx.fillRect(0,0,W,H);
+        ctx.globalCompositeOperation = "source-over";
+        vignette(ctx, W, H, .55, .42);
+        drawGrain(ctx, W, H, grain, .07);
+      }
+    }
+  ];
+
+  function vignette(ctx, W, H, inner, alpha) {
+    const vg = ctx.createRadialGradient(W/2, H/2, Math.min(W,H)*inner, W/2, H/2, Math.max(W,H)*.85);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0," + alpha + ")");
+    ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+  }
+
+  let grainCanvas = null;
+  function buildGrain() {
+    const g = document.createElement("canvas");
+    g.width = 256; g.height = 256;
+    const c = g.getContext("2d");
+    const img = c.createImageData(256, 256);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const n = 128 + ((Math.random() - .5) * 110);
+      img.data[i] = img.data[i+1] = img.data[i+2] = n;
+      img.data[i+3] = 255;
+    }
+    c.putImageData(img, 0, 0);
+    grainCanvas = g;
+  }
+  function drawGrain(ctx, W, H, grain, alpha) {
+    if (!grain) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "overlay";
+    ctx.globalAlpha = alpha;
+    const ox = (Math.random() * 256) | 0;
+    const oy = (Math.random() * 256) | 0;
+    ctx.translate(-ox, -oy);
+    const p = ctx.createPattern(grain, "repeat");
+    ctx.fillStyle = p;
+    ctx.fillRect(ox, oy, W, H);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  const tmpCanvas = document.createElement("canvas");
+  tmpCanvas.width = CAM_W; tmpCanvas.height = CAM_H;
+
+  function drawPreset(ctx, video, preset) {
+    const W = CAM_W, H = CAM_H;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) return;
+    const scale = Math.max(W / vw, H / vh);
+    const dw = vw * scale, dh = vh * scale;
+    const dx = (W - dw) / 2, dy = (H - dh) / 2;
+    ctx.save();
+    ctx.filter = preset.filter || "none";
+    if (facingMode === "user") { ctx.translate(W, 0); ctx.scale(-1, 1); ctx.drawImage(video, W - dx - dw, dy, dw, dh); }
+    else { ctx.drawImage(video, dx, dy, dw, dh); }
+    ctx.restore();
+    ctx.filter = "none";
+    if (preset.halate) {
+      const t = tmpCanvas.getContext("2d");
+      t.save();
+      t.clearRect(0,0,W,H);
+      t.filter = "blur(10px) brightness(1.55) saturate(2) sepia(.45) hue-rotate(-12deg)";
+      if (facingMode === "user") { t.translate(W, 0); t.scale(-1, 1); t.drawImage(video, W - dx - dw, dy, dw, dh); }
+      else { t.drawImage(video, dx, dy, dw, dh); }
+      t.restore();
+      t.filter = "none";
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = .55;
+      ctx.drawImage(tmpCanvas, 0, 0);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+    }
+    preset.overlay(ctx, W, H, grainCanvas);
+  }
+
+  /* ---------- runtime state ---------- */
+  let stream = null;
+  let facingMode = "environment";   // default to back camera per user request
+  let presetIx = 0;
+  let shots = [];
+  let rafId = 0, vfcId = 0, active = false;
+  let tcStart = 0;
+
+  const video    = document.getElementById("video");
+  const canvas   = document.getElementById("canvas");
+  const ctx      = canvas.getContext("2d");
+  const gate     = document.getElementById("gate");
+  const errMsg   = document.getElementById("errMsg");
+  const startBtn = document.getElementById("startBtn");
+  const shutter  = document.getElementById("shutter");
+  const flipBtn  = document.getElementById("flipBtn");
+  const thumbEl  = document.getElementById("thumb");
+  const chipsEl  = document.getElementById("chips");
+  const flashEl  = document.getElementById("flash");
+  const tcEl     = document.getElementById("tc");
+  const toastEl  = document.getElementById("toast");
+
+  /* build the preset chips */
+  PRESETS.forEach((p, i) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (i === 0 ? " on" : "");
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", String(i === 0));
+    b.dataset.ix = String(i);
+    b.innerHTML = '<span class="name">' + p.name + '</span><span class="sub">' + p.sub + '</span>';
+    b.addEventListener("click", () => setPreset(i));
+    chipsEl.appendChild(b);
+  });
+
+  function setPreset(i) {
+    presetIx = i;
+    Array.from(chipsEl.children).forEach((c, j) => {
+      c.classList.toggle("on", j === i);
+      c.setAttribute("aria-checked", String(j === i));
+    });
+  }
+
+  function setFacingClass() {
+    video.classList.toggle("front", facingMode === "user");
+    // we mirror via canvas only on the captured pass, but CSS-mirror the raw video element
+    // when it's selfie so the underlying "fallback" preview matches the canvas.
+  }
+
+  async function startCamera() {
+    errMsg.style.display = "none";
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: facingMode },
+          width:  { ideal: 1280 },
+          height: { ideal: 1920 }
+        },
+        audio: false
+      });
+      setFacingClass();
+      video.srcObject = stream;
+      await video.play();
+      gate.classList.add("hidden");
+      shutter.disabled = false;
+      tcStart = Date.now();
+      startTimecode();
+      startRenderLoop();
+    } catch (e) {
+      errMsg.style.display = "block";
+      errMsg.textContent = e && e.name === "NotAllowedError"
+        ? "Camera access denied — allow it in browser settings."
+        : ("Camera unavailable — " + (e && e.message || e && e.name || "unknown error"));
+    }
+  }
+
+  function stopCamera() {
+    active = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    if (vfcId && video.cancelVideoFrameCallback) { try { video.cancelVideoFrameCallback(vfcId); } catch {} }
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+
+  function startRenderLoop() {
+    active = true;
+    const paint = () => {
+      if (!active) return;
+      drawPreset(ctx, video, PRESETS[presetIx]);
+    };
+    if (typeof video.requestVideoFrameCallback === "function") {
+      const vfc = () => { if (!active) return; paint(); vfcId = video.requestVideoFrameCallback(vfc); };
+      vfcId = video.requestVideoFrameCallback(vfc);
+    } else {
+      const raf = () => { if (!active) return; paint(); rafId = requestAnimationFrame(raf); };
+      raf();
+    }
+  }
+
+  let tcTimer = 0;
+  function startTimecode() {
+    clearInterval(tcTimer);
+    tcTimer = setInterval(() => {
+      const e = Date.now() - tcStart;
+      const s = (e / 1000) | 0;
+      const f = ((e % 1000) / 41.66) | 0;
+      const hh = String((s / 3600) | 0).padStart(2, "0");
+      const mm = String(((s % 3600) / 60) | 0).padStart(2, "0");
+      const ss = String(s % 60).padStart(2, "0");
+      const ff = String(f).padStart(2, "0");
+      tcEl.textContent = hh + ":" + mm + ":" + ss + ":" + ff;
+    }, 100);
+  }
+
+  /* ---------- capture ---------- */
+  let toastTimer = 0;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("show"), 1800);
+  }
+  function flashOn() {
+    flashEl.classList.remove("on");
+    void flashEl.offsetWidth;
+    flashEl.classList.add("on");
+  }
+
+  async function capture() {
+    if (!stream) return;
+    flashOn();
+    const url = canvas.toDataURL("image/jpeg", 0.92);
+    const id = Date.now();
+    const preset = PRESETS[presetIx];
+    shots.unshift({ src: url, id, presetId: preset.id });
+    shots = shots.slice(0, 6);
+    thumbEl.innerHTML = '<img src="' + url + '" alt="last frame" />';
+    try {
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], "RGC-" + preset.id + "-" + id + ".jpg", { type: "image/jpeg" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: "RGC Filmcam" });
+        toast("Shared ✓");
+      } else {
+        const a = document.createElement("a");
+        a.href = url; a.download = file.name; a.click();
+        toast("Saved ✓");
+      }
+    } catch (e) { /* user cancelled — frame still in thumb */ }
+  }
+
+  /* ---------- events ---------- */
+  startBtn.addEventListener("click", startCamera);
+  shutter.addEventListener("click", capture);
+  flipBtn.addEventListener("click", async () => {
+    facingMode = (facingMode === "environment") ? "user" : "environment";
+    if (stream) {
+      stopCamera();
+      await startCamera();
+    }
+  });
+  thumbEl.addEventListener("click", () => {
+    if (!shots[0]) return;
+    const a = document.createElement("a");
+    a.href = shots[0].src;
+    a.download = "RGC-" + shots[0].presetId + "-" + shots[0].id + ".jpg";
+    a.click();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && stream) stopCamera();
+  });
+  window.addEventListener("pagehide", stopCamera);
+
+  buildGrain();
+  </script>
+</body>
+</html>
