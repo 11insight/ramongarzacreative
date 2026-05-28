@@ -2205,3 +2205,177 @@ h2.section-title em {
   .contact-grid { grid-template-columns: 1fr; }
   .chrome nav { display: none; }
 }
+
+/* ====================================================================
+   📱 MOBILE — iPhone 16/17 Pro pass (≤ 600px)
+   - tightens the cinematic full-bleed padding to actually fit a phone
+   - kills min-height:100vh on most sections so short sections don't have
+     a viewport of dead space below their content
+   - collapses every grid that was 2/3 columns into a single column
+   - safe-area-inset (Dynamic Island top + home-bar bottom) honored on
+     the fixed chrome bar and the scroll rail
+   - hides the rotated side labels on the Studio badge that overflow
+     the screen on narrow viewports
+   ==================================================================== */
+@media (max-width: 600px) {
+  /* fixed top chrome — safe area aware, tighter, brand only */
+  .chrome {
+    padding-top: calc(max(env(safe-area-inset-top), 8px));
+    padding-bottom: 8px;
+    padding-left: 14px; padding-right: 14px;
+    font-size: 10px;
+    gap: 10px;
+  }
+  .chrome .brand { gap: 10px; }
+  .chrome .rgc-mark { font-size: 18px; }
+  .chrome .rec { font-size: 9px; }
+  .chrome .right { gap: 10px; }
+  .chrome .right span { font-size: 9px; }
+  .scroll-rail { top: calc(max(env(safe-area-inset-top), 8px) + 36px); }
+
+  /* base scene — drop the 100vh forcing, much tighter padding */
+  section.scene {
+    padding: 80px 5vw 56px;
+    min-height: auto;
+    justify-content: flex-start;
+  }
+  section.scene.compact { padding: 56px 5vw 40px; }
+  /* nudge our earlier per-section overrides into mobile values */
+  #s01 { padding-top: 80px; }
+  #s01 .scene-label { top: 56px; }
+  #s05, #s06 { padding-bottom: 48px; }
+
+  /* scene label closer to the top, smaller, less letter-spacing */
+  .scene-label {
+    top: 56px; left: 5vw;
+    gap: 8px; font-size: 9.5px; letter-spacing: .14em;
+  }
+  .scene-label .num { padding: 2px 6px; }
+  .scene-label .tick { display: none; }     /* the long "/ Block 04.12 — 06.21" tag overflows on phone */
+
+  /* corner brackets are decorative and clip on narrow screens */
+  .brackets { display: none; }
+
+  /* section heads stack title above meta, smaller display type */
+  .section-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .section-head .meta { font-size: 10px; line-height: 1.55; }
+  h2.section-title { font-size: clamp(40px, 13vw, 70px); }
+  h2.section-title em { font-size: .85em; }
+
+  /* ───── 00 HERO ───── */
+  .hero { padding: 60px 0 0; min-height: 100vh; }
+  .hero-top { padding: 56px 5vw 24px; gap: 18px; grid-template-columns: 1fr; }
+  .hero-top .slate-name { font-size: clamp(28px, 9vw, 52px); }
+  .hero-top .stack { grid-template-columns: 70px 1fr; gap: 3px 12px; font-size: 10px; }
+  .hero-center { padding: 12px 5vw; }
+  .glitch-blackletter { font-size: clamp(48px, 17vw, 110px); letter-spacing: -.02em; white-space: normal; text-align: center; }
+  .reg-circle { right: -26px; top: 8%; width: 22px; height: 22px; font-size: 10px; }
+  .hero-bottom { padding: 28px 5vw 30px; gap: 18px; grid-template-columns: 1fr; text-align: center; }
+  .hero-bottom .right { text-align: center; }
+  .hero-bottom .col { align-items: center; }
+  .bolt { display: grid; place-items: center; }
+  .bolt svg { width: 36px; height: 60px; }
+  .scroll-hint { bottom: calc(env(safe-area-inset-bottom) + 8px); font-size: 9px; }
+  .tv-noise { transform: scale(.65); }
+
+  /* ───── 01 SCHEDULE ───── */
+  .slate-grid { gap: 18px; }
+  .slate-rows { gap: 10px; }
+  .slate-row { flex-wrap: wrap; gap: 10px 14px; padding-left: 0 !important; font-size: 11px; }
+  .slate-item { gap: 6px; }
+  .slate-item .date { font-size: 10px; }
+  .bolt-wrap { flex-direction: column; gap: 14px; text-align: center; margin-top: 22px; }
+  .bolt-wrap .l, .bolt-wrap .r { text-align: center; }
+
+  /* ───── 02 REEL ───── */
+  .reel { grid-template-columns: 1fr; gap: 12px; }
+  .reel .clip-8, .reel .clip-4, .reel .clip-6, .reel .clip-12 {
+    grid-column: 1 / -1; aspect-ratio: 16 / 9;
+  }
+  .timecode-strip { flex-wrap: wrap; font-size: 9.5px; gap: 8px 12px; }
+
+  /* ───── 03 STILLS ───── */
+  .photo-grid { grid-template-columns: 1fr; gap: 10px; }
+  .photo.p1, .photo.p2, .photo.p3, .photo.p4,
+  .photo.p5, .photo.p6, .photo.p7, .photo.p8 {
+    grid-column: 1 / -1; aspect-ratio: 4 / 3;
+  }
+  .photo .ph-num, .photo .ph-meta { font-size: 9px; }
+
+  /* ───── 04 FILMCAM (launcher card on main page) ───── */
+  .cam-stage.no-frame { max-width: 100%; padding: 0; }
+  .preset-chips { grid-template-columns: repeat(2, 1fr) !important; gap: 6px; }
+  .preset-chip { padding: 8px 9px; }
+  .preset-chip .pc-name { font-size: 11.5px; }
+  .preset-chip .pc-sub { font-size: 8.5px; }
+  .cam-readout { grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 9px; }
+  .cam-readout > div { padding: 9px 10px; }
+  .cam-readout .v { font-size: 12px; }
+  .cam-shutter-btn { width: 100%; justify-content: center; }
+
+  /* ───── 05 GUIDES ───── */
+  .tape-strip { font-size: 9px; }
+  .guides-grid { grid-template-columns: 1fr; gap: 14px; }
+  .guide-card { padding: 18px 16px; }
+  .guide-card h4 { font-size: 22px; }
+  .guide-card .sub { font-size: 12px; }
+  .guide-card .edge-num { font-size: 8px; right: 10px; top: 10px; }
+  .guide-card .sprockets { left: 6px; }
+
+  /* ───── 06 AI MEDIA ───── */
+  .ai-grid { grid-template-columns: 1fr; gap: 14px; }
+  .ai-card { padding: 24px 20px; min-height: auto; }
+  .ai-card h3 { font-size: 26px; }
+  .ai-cta { flex-direction: column; align-items: stretch; gap: 16px; }
+  .ai-cta .btn-acid { width: 100%; justify-content: center; text-align: center; }
+  .ai-glitch { font-size: clamp(36px, 12vw, 70px); }
+
+  /* ───── 07 STUDIO ───── */
+  .badge-card { padding: 32px 18px; }
+  .badge-card .side-text { display: none; }      /* rotated edge labels overlap on narrow */
+  .ignite-bolt { width: 110px; height: 110px; }
+  .ignite-bolt svg { width: 58px; height: 96px; }
+  .badge-card .subline { font-size: 10px; letter-spacing: .18em; }
+  .badge-table { width: 100%; grid-template-columns: 1fr 1fr; }
+  .badge-table > div { padding: 9px 12px; font-size: 9px; }
+  .badge-rows { width: 100%; max-width: 100%; }
+  .badge-row { font-size: 9px; padding: 9px 12px; }
+  .badge-card .footer-text { font-size: 9.5px; letter-spacing: .18em; }
+
+  /* Studio build terminal */
+  .code-term { width: 100%; }
+  .ct-bar { padding: 7px 10px; font-size: 10px; }
+  .ct-title { font-size: 9px; letter-spacing: .10em; }
+  .ct-actions button { font-size: 10px; }
+  .ct-body { padding: 12px 14px; font-size: 11px; max-height: 56vh; }
+
+  /* ───── 08 CONTACT ───── */
+  .contact-grid { grid-template-columns: 1fr; gap: 22px; }
+  .contact-info .lbl { margin-top: 14px; }
+  .contact-form { padding: 18px 14px; }
+  .contact-form .row { grid-template-columns: 1fr; gap: 4px; }
+  .contact-form .row .lbl { padding-top: 0; }
+  .contact-form input, .contact-form textarea { font-size: 16px; }    /* 16px = no iOS zoom on focus */
+  .contact-form button { width: 100%; padding: 14px 18px; min-height: 48px; }
+  .bottom-bar { flex-direction: column; align-items: center; gap: 10px; text-align: center; padding-bottom: max(env(safe-area-inset-bottom), 18px); }
+  .bottom-bar .socials { justify-content: center; flex-wrap: wrap; gap: 14px; }
+  .dymo-label { font-size: 11px; }
+
+  /* ───── Lightbox ───── */
+  .lightbox img { max-width: 96vw; max-height: 80vh; }
+  .lb-close { top: max(env(safe-area-inset-top), 14px); right: 14px; font-size: 11px; }
+  .lb-meta { font-size: 10px; padding: 0 14px max(env(safe-area-inset-bottom), 18px); text-align: center; }
+
+  /* misc tap targets */
+  button, .cam-shutter-btn, .cam-btn, .btn-acid { min-height: 44px; }
+}
+
+/* a notch tighter for very narrow phones (<= 380px, iPhone SE / mini sizes) */
+@media (max-width: 380px) {
+  section.scene { padding: 70px 4vw 44px; }
+  .scene-label { font-size: 9px; }
+  h2.section-title { font-size: clamp(34px, 13vw, 56px); }
+  .preset-chips { grid-template-columns: 1fr 1fr !important; }
+  .hero-top .stack { grid-template-columns: 60px 1fr; font-size: 9.5px; }
+  .glitch-blackletter { font-size: clamp(40px, 17vw, 88px); }
+}
