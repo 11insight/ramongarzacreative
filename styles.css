@@ -228,7 +228,7 @@ section.scene.compact .brackets { display: none; }
 
 .hero-top {
   display: grid;
-  grid-template-columns: 1.1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;     /* slate-name removed → 2-col slate meta */
   gap: 40px;
   padding: 80px 6vw 40px;
   font-family: var(--vy-font-mono);
@@ -344,8 +344,10 @@ section.scene.compact .brackets { display: none; }
 .tv-noise {
   position: absolute;
   width: 22px; height: 9px;
+  /* matches the red/cyan chromatic-aberration palette of the .glitch-blackletter
+     wordmark — same "3D out" TV-fuzz colors throughout */
   background-image:
-    linear-gradient(90deg, #e255a6 0 25%, #2fd6ff 25% 50%, #c8fa3c 50% 75%, #ff5544 75% 100%);
+    linear-gradient(90deg, #ff2f6e 0 50%, #2fd6ff 50% 100%);
   background-size: 4px 4px;
   background-repeat: repeat;
   filter: blur(.3px) saturate(1.4);

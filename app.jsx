@@ -106,15 +106,10 @@ function Hero({ onLightning }) {
       <div className="tv-noise" style={{ top: 90, right: "5vw" }} />
       <div className="tv-noise" style={{ bottom: 80, left: "6vw" }} />
       <div className="tv-noise" style={{ bottom: 110, right: "8vw" }} />
-      <div className="ana-flare" style={{ top: "32%", left: "-10%", right: "-10%" }} />
+      {/* hero anamorphic flare removed by request */}
 
       {/* TOP ROW — slate meta */}
       <div className="hero-top">
-        <div>
-          <div className="slate-name">
-            Ramon Garza<br/>Creative<span className="reg"> ®</span>
-          </div>
-        </div>
         <div className="stack">
           <span className="label">Founder</span>
           <span className="val">Ramon Garza</span>
@@ -148,7 +143,7 @@ function Hero({ onLightning }) {
       {/* BOTTOM — bolt + tagline */}
       <div className="hero-bottom">
         <div className="col">
-          <span className="ttl">L · Artificially Enhanced</span>
+          <span className="ttl">Artificially Enhanced</span>
           <span>AI / LLM Enabled</span>
           <span className="ttl" style={{ marginTop: 10 }}>{phrases[count % phrases.length]}</span>
         </div>
@@ -156,7 +151,7 @@ function Hero({ onLightning }) {
           <Bolt onClick={onLightning} />
         </div>
         <div className="col right">
-          <span className="ttl">R · Edit / Cut</span>
+          <span className="ttl">Edit / Cut</span>
           <span>Ramon Garza Creative</span>
           <span className="ttl" style={{ marginTop: 10 }}>Content, Lightning Fast</span>
         </div>
@@ -300,13 +295,11 @@ function Schedule({ onLightning }) {
 
         <div className="bolt-wrap">
           <div className="l">
-            <div style={{ color: "var(--vy-fg-dim)", fontSize: 11, letterSpacing: ".2em" }}>L · Pole</div>
             Artificially Enhanced<br/>
             AI / LLM Enabled
           </div>
           <div className="bolt" onClick={onLightning}><Bolt onClick={onLightning} /></div>
           <div className="r">
-            <div style={{ color: "var(--vy-fg-dim)", fontSize: 11, letterSpacing: ".2em" }}>R · Pole</div>
             Edit / Cut<br/>
             Ramon Garza Creative
           </div>
@@ -1262,7 +1255,7 @@ function Badge() {
 
       {phase !== "coding" && (
         <div className={`badge-stage ${phase === "fading" ? "fade-out" : ""}`}>
-          <div className="ana-flare ana-live" style={{ top: "38%", left: "-12%", right: "-12%" }} />
+          {/* Studio anamorphic flare removed by request */}
           <div className="badge-card">
             <div className="side-text l">↓ Engineered by ROC Labs ↓</div>
             <div className="side-text r">↓ Film &amp; Motion Technology ↓</div>
