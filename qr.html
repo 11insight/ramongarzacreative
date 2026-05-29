@@ -95,40 +95,27 @@
       line-height: 1.6;
     }
 
-    /* qr panel — bright white card holding a high-contrast scannable QR */
+    /* qr — inverted (white squares on black), no card frame, no white border.
+       Ambient acid-green glow only. iOS Camera + modern Android scanners read
+       inverted QR codes reliably. */
     .qr-card {
       align-self: center;
       width: min(82vw, 380px);
       aspect-ratio: 1;
-      background: #fff;
-      border-radius: 18px;
-      padding: 18px;
+      background: transparent;
+      padding: 0;
       display: grid;
       place-items: center;
-      box-shadow:
-        0 0 0 1px rgba(200,250,60,.35),
-        0 0 40px rgba(200,250,60,.25),
-        0 30px 80px rgba(0,0,0,.55);
+      filter: drop-shadow(0 0 30px rgba(200, 250, 60, .25));
       margin: 6px auto 4px;
       position: relative;
     }
     .qr-card canvas {
       width: 100%;
       height: 100%;
-      image-rendering: pixelated;     /* keep squares crisp, no AA blur */
+      image-rendering: pixelated;
       image-rendering: -moz-crisp-edges;
       image-rendering: crisp-edges;
-    }
-    /* RGC monogram tucked into the corner */
-    .qr-card::after {
-      content: "RGC";
-      position: absolute;
-      bottom: 8px; right: 14px;
-      font-family: "Bebas Neue", Impact, sans-serif;
-      font-size: 11px;
-      letter-spacing: .22em;
-      color: #000;
-      opacity: .55;
     }
     .scan-hint {
       text-align: center;
@@ -316,14 +303,15 @@
       "END:VCARD"
     ].join("\n");
 
-    // build a high-res, error-corrected QR — pure black/white for best scan rate
+    // inverted QR — white squares on black, no panel, no white border.
+    // iOS Camera + modern Android scanners handle inverted reliably.
     const qr = new QRious({
       element: document.getElementById("qr"),
       value: VCARD,
-      size: 900,             // backing resolution; CSS scales down
-      background: "#ffffff",
-      foreground: "#000000",
-      level: "Q",            // ~25% error correction — survives the corner badge
+      size: 900,
+      background: "#000000",
+      foreground: "#ffffff",
+      level: "H",            // ~30% error correction — extra margin for inverted scan
       padding: 0
     });
 
