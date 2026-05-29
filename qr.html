@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="robots" content="noindex" />
+  <title>RGC · Save Contact</title>
+  <meta name="description" content="Scan to save Ramon Garza's contact card." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Hanken+Grotesk:wght@500;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      min-height: 100vh;
+      background: #000;
+      color: #fff;
+      font-family: "Hanken Grotesk", system-ui, sans-serif;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    a, button { color: inherit; text-decoration: none; font: inherit; }
+
+    /* faint film-grain overlay so the page reads as part of the RGC system */
+    body::after {
+      content: "";
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(circle at 12% 8%, rgba(255,140,60,.06), transparent 55%),
+        radial-gradient(circle at 92% 92%, rgba(120,200,255,.05), transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* page layout */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding:
+        max(env(safe-area-inset-top), 16px)
+        20px
+        max(env(safe-area-inset-bottom), 22px);
+      gap: 18px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* top bar */
+    .top {
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: "Space Mono", monospace;
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.65);
+    }
+    .top .rgc {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      letter-spacing: .18em;
+      font-size: 22px;
+      color: #fff;
+    }
+    .top .rgc sup { font-size: .45em; vertical-align: top; opacity: .7; }
+
+    /* hero / eyebrow */
+    .hero {
+      margin-top: 8px;
+      text-align: center;
+    }
+    .hero .eyebrow {
+      font-family: "Space Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      color: #c8fa3c;
+      text-shadow: 0 0 14px rgba(200,250,60,.4);
+      margin-bottom: 10px;
+    }
+    .hero h1 {
+      font-family: "Bebas Neue", Impact, sans-serif;
+      letter-spacing: .03em;
+      font-size: clamp(40px, 12vw, 64px);
+      line-height: .95;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: rgba(255,255,255,.5);
+      font-weight: 400;
+    }
+    .hero .sub {
+      margin-top: 12px;
+      font-family: "Space Mono", monospace;
+      font-size: 11.5px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.6);
+      line-height: 1.6;
+    }
+
+    /* qr panel — bright white card holding a high-contrast scannable QR */
+    .qr-card {
+      align-self: center;
+      width: min(82vw, 380px);
+      aspect-ratio: 1;
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      box-shadow:
+        0 0 0 1px rgba(200,250,60,.35),
+        0 0 40px rgba(200,250,60,.25),
+        0 30px 80px rgba(0,0,0,.55);
+      margin: 6px auto 4px;
+      position: relative;
+    }
+    .qr-card canvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;     /* keep squares crisp, no AA blur */
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
+    /* RGC monogram tucked into the corner */
+    .qr-card::after {
+      content: "RGC";
+      position: absolute;
+      bottom: 8px; right: 14px;
+      font-family: "Bebas Neue", Impact, sans-serif;
+      font-size: 11px;
+      letter-spacing: .22em;
+      color: #000;
+      opacity: .55;
+    }
+    .scan-hint {
+      text-align: center;
+      font-family: "Space Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+      margin-top: 4px;
+    }
+
+    /* contact tile */
+    .contact {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .contact .row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      min-height: 56px;
+      transition: border-color .15s ease, background .15s ease;
+    }
+    .contact .row:active { background: rgba(200,250,60,.08); border-color: rgba(200,250,60,.45); }
+    .contact .row .ic {
+      flex: 0 0 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: rgba(200,250,60,.12);
+      border: 1px solid rgba(200,250,60,.35);
+      display: grid; place-items: center;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 14px;
+      color: #c8fa3c;
+    }
+    .contact .row .txt {
+      display: grid; gap: 2px; min-width: 0;
+    }
+    .contact .row .lbl {
+      font-family: "Space Mono", monospace;
+      font-size: 9.5px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+    }
+    .contact .row .val {
+      font-family: "Hanken Grotesk", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: .01em;
+      color: #fff;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* socials row */
+    .socials {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .socials a {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+      padding: 14px 12px;
+      background: #c8fa3c;
+      color: #000;
+      border-radius: 999px;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 11.5px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      box-shadow: 0 0 22px rgba(200,250,60,.45);
+      min-height: 48px;
+    }
+    .socials a.ghost {
+      background: rgba(20,20,20,.55);
+      color: #fff;
+      border: 1px solid rgba(200,250,60,.45);
+      box-shadow: none;
+    }
+    .socials a:active { transform: scale(.97); }
+
+    /* download contact button */
+    .save-btn {
+      display: block;
+      margin: 12px auto 0;
+      text-align: center;
+      padding: 14px 28px;
+      background: transparent;
+      border: 1px solid rgba(200,250,60,.55);
+      color: #c8fa3c;
+      border-radius: 999px;
+      font-family: "Space Mono", monospace;
+      font-weight: 700;
+      font-size: 11.5px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      min-height: 48px;
+    }
+    .save-btn:active { background: rgba(200,250,60,.08); }
+
+    /* footer back link */
+    .footer {
+      margin-top: auto;
+      text-align: center;
+      padding-top: 16px;
+    }
+    .footer a {
+      font-family: "Space Mono", monospace;
+      font-size: 10.5px;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <span class="rgc">RGC<sup>™</sup></span>
+      <span>Save Contact</span>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Scan with your camera</div>
+      <h1>Ramon Garza <em>Creative</em></h1>
+      <p class="sub">Point your phone camera at the code — tap to save the contact.</p>
+    </section>
+
+    <div class="qr-card" id="qrCard">
+      <canvas id="qr"></canvas>
+    </div>
+    <div class="scan-hint">↑ Tap to download · or scan</div>
+
+    <div class="contact">
+      <a class="row" href="tel:+17607910284">
+        <div class="ic">☎</div>
+        <div class="txt">
+          <span class="lbl">Phone · SMS</span>
+          <span class="val">(760) 791-0284</span>
+        </div>
+      </a>
+      <a class="row" href="mailto:ramon@ramongarzacreative.com">
+        <div class="ic">@</div>
+        <div class="txt">
+          <span class="lbl">Email</span>
+          <span class="val">ramon@ramongarzacreative.com</span>
+        </div>
+      </a>
+    </div>
+
+    <div class="socials">
+      <a href="https://instagram.com/ramongarzacreative" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.tiktok.com/@ramongarzacreative" target="_blank" rel="noopener" class="ghost">TikTok</a>
+    </div>
+
+    <a class="save-btn" id="dlBtn" href="#" download="ramon-garza.vcf">↓ Download .vcf</a>
+
+    <div class="footer">
+      <a href="/">← back to ramongarzacreative.com</a>
+    </div>
+  </main>
+
+  <!-- QR generator (canvas) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+  <script>
+    /* vCard 3.0 — recognized by iOS Camera, Android scanners, etc.
+       Scan triggers an "Add to Contacts" prompt automatically. */
+    const VCARD = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      "N:Garza;Ramon;;;",
+      "FN:Ramon Garza",
+      "ORG:Ramon Garza Creative",
+      "TITLE:Director / Founder",
+      "TEL;TYPE=CELL,VOICE:+17607910284",
+      "EMAIL;TYPE=INTERNET:ramon@ramongarzacreative.com",
+      "URL:https://ramongarzacreative.com",
+      "URL:https://instagram.com/ramongarzacreative",
+      "URL:https://www.tiktok.com/@ramongarzacreative",
+      "NOTE:Instagram + TikTok @ramongarzacreative",
+      "END:VCARD"
+    ].join("\n");
+
+    // build a high-res, error-corrected QR — pure black/white for best scan rate
+    const qr = new QRious({
+      element: document.getElementById("qr"),
+      value: VCARD,
+      size: 900,             // backing resolution; CSS scales down
+      background: "#ffffff",
+      foreground: "#000000",
+      level: "Q",            // ~25% error correction — survives the corner badge
+      padding: 0
+    });
+
+    // download-as-.vcf shortcut for people viewing the page directly
+    const blob = new Blob([VCARD], { type: "text/vcard" });
+    const dlUrl = URL.createObjectURL(blob);
+    document.getElementById("dlBtn").href = dlUrl;
+  </script>
+</body>
+</html>
