@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#000000" />
+  <!-- 1) JS replace fires first, before any paint -->
+  <script>window.location.replace("/");</script>
+  <!-- 2) meta-refresh fallback if JS is disabled -->
+  <meta http-equiv="refresh" content="0; url=/" />
+  <title>RGC</title>
+  <style>
+    html, body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: "Space Mono", monospace;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+    a {
+      color: #c8fa3c;
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      padding: 12px 22px;
+      border: 1px solid rgba(200, 250, 60, .35);
+      border-radius: 999px;
+      box-shadow: 0 0 18px rgba(200, 250, 60, .25);
+    }
+  </style>
+</head>
+<body>
+  <!-- 3) tappable fallback if both redirects fail -->
+  <a href="/">→ ramongarzacreative.com</a>
+</body>
+</html>
