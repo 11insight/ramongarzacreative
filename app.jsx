@@ -43,7 +43,7 @@ function Chrome() {
   const tc = now.toISOString().slice(11,19);
   const links = [
     ["00", "Slate"], ["01", "Schedule"], ["02", "Reel"],
-    ["03", "Stills"], ["04", "Cam"], ["05", "Guides"],
+    ["03", "Stills"], ["05", "Guides"],
     ["06", "Hooks"], ["07", "AI"], ["08", "Studio"], ["09", "Contact"]
   ];
   return (
@@ -1920,7 +1920,7 @@ function App() {
       <Schedule onLightning={firePaparazzi} />
       <Reel onPickPhoto={pick} />
       <Stills onPickPhoto={pick} />
-      <Super8Cam />
+      {/* <Super8Cam /> — Live cam hidden for now */}
       <Guides />
       <HookMaker />
       <AITools />
