@@ -170,9 +170,9 @@ section.scene.compact {
 section.scene.compact .scene-label { position: relative; top: 0; left: 0; margin-bottom: 30px; }
 section.scene.compact .brackets { display: none; }
 
-/* Guides (#s05) + AI Media (#s06): size to content instead of forcing a full
-   viewport with centered slack — kills the dead band between them and Studio. */
-#s05, #s06 {
+/* Guides (#s05) + Hook Lab (#s06) + AI Media (#s07): size to content instead of
+   forcing a full viewport with centered slack — kills the dead band before Studio. */
+#s05, #s06, #s07 {
   min-height: auto;
   padding-bottom: 80px;
 }
@@ -1221,6 +1221,204 @@ body.cam-fs-open { overflow: hidden; }    /* lock background scroll while popup 
 .btn-acid:hover { box-shadow: var(--vy-glow-acid-hover); transform: translateY(-1px); }
 
 /* =========================================================
+   06½ HOOK LAB — Viral Hook Maker tool
+   Reuses the film-card grammar: hairline borders, mono labels,
+   acid CTA, blackletter section title.
+   ========================================================= */
+.hook-tool { margin-top: 30px; }
+
+/* topic input + generate button */
+.hook-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+.hook-bar.shake { animation: hook-shake .4s ease; }
+@keyframes hook-shake {
+  0%,100% { transform: translateX(0); }
+  20%,60% { transform: translateX(-6px); }
+  40%,80% { transform: translateX(6px); }
+}
+.hook-input {
+  flex: 1;
+  background: #0a0a0c;
+  border: 1px solid var(--vy-hair-strong);
+  color: var(--vy-fg);
+  font-family: var(--vy-font-mono);
+  font-size: 14px;
+  letter-spacing: .04em;
+  padding: 16px 18px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.hook-input::placeholder { color: var(--vy-fg-faint); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; }
+.hook-input:focus { border-color: var(--vy-acid); box-shadow: 0 0 0 1px var(--vy-acid); }
+.hook-bar.shake .hook-input { border-color: #ff2f6e; box-shadow: 0 0 0 1px #ff2f6e; }
+.hook-go { white-space: nowrap; }
+
+/* detected niche chip */
+.hook-niche {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--vy-font-mono);
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--vy-acid);
+  padding: 6px 12px;
+  border: 1px dashed var(--vy-hair-strong);
+  background: rgba(255,255,255,.04);
+  margin-bottom: 24px;
+}
+.hook-niche .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--vy-acid); box-shadow: 0 0 8px rgba(200,250,60,.7); }
+
+/* hook result cards */
+.hook-grid { display: grid; gap: 12px; }
+.hook-card {
+  position: relative;
+  background: #0a0a0c;
+  border: 1px solid var(--vy-hair);
+  padding: 18px 20px;
+  display: flex; flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  animation: hook-fade .4s ease forwards;
+  transition: border-color .2s, transform .25s;
+}
+.hook-card:hover { border-color: var(--vy-hair-strong); transform: translateY(-2px); }
+@keyframes hook-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.hook-tag {
+  align-self: flex-start;
+  font-family: var(--vy-font-mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--vy-acid);
+  padding: 4px 9px;
+  border: 1px solid var(--vy-acid);
+  border-radius: 999px;
+}
+.hook-text {
+  font-family: var(--vy-font-sans);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--vy-fg);
+}
+.hook-actions { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+.hook-use {
+  background: var(--vy-acid);
+  color: #000;
+  font-family: var(--vy-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  border-radius: 999px;
+  transition: box-shadow .2s, transform .15s;
+}
+.hook-use:hover { box-shadow: var(--vy-glow-acid); transform: translateY(-1px); }
+.hook-copy {
+  font-family: var(--vy-font-mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--vy-fg-dim);
+  padding: 9px 12px;
+  border: 1px solid var(--vy-hair);
+  border-radius: 999px;
+  transition: color .2s, border-color .2s;
+}
+.hook-copy:hover { color: var(--vy-fg); border-color: var(--vy-hair-strong); }
+
+/* generated script panel */
+.hook-script {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px dashed rgba(255,255,255,.12);
+  animation: hook-fade .45s ease forwards;
+}
+.hook-script-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.hook-script-head h3 {
+  font-family: var(--vy-font-display);
+  font-size: clamp(34px, 6vw, 56px);
+  line-height: .9;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+.hook-copyall {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--vy-font-mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--vy-fg-dim);
+  padding: 10px 16px;
+  border: 1px solid var(--vy-hair-strong);
+  border-radius: 999px;
+  transition: color .2s, border-color .2s;
+}
+.hook-copyall:hover { color: var(--vy-acid); border-color: var(--vy-acid); }
+
+.hook-selected {
+  font-family: var(--vy-font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--vy-acid);
+  background: rgba(200,250,60,.06);
+  border: 1px solid rgba(200,250,60,.22);
+  padding: 18px 20px;
+  margin-bottom: 30px;
+}
+
+/* script blocks — left rule, color-coded like a film leader */
+.hook-block {
+  border-left: 2px solid var(--vy-hair-strong);
+  padding-left: 18px;
+  margin-bottom: 28px;
+}
+.hook-block.frames { border-left-color: var(--vy-acid); }
+.hook-block.body   { border-left-color: var(--vy-blue-soft); }
+.hook-block.cta    { border-left-color: var(--vy-jade); }
+.hook-block-title {
+  font-family: var(--vy-font-mono);
+  font-size: 12px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.hook-block.frames .hook-block-title { color: var(--vy-acid); }
+.hook-block.body   .hook-block-title { color: var(--vy-blue-soft); }
+.hook-block.cta    .hook-block-title { color: var(--vy-jade); }
+.hook-line {
+  background: #0a0a0c;
+  border: 1px solid var(--vy-hair-soft);
+  padding: 13px 16px;
+  margin-bottom: 8px;
+}
+.hook-line .k {
+  display: block;
+  font-family: var(--vy-font-mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--vy-fg);
+  margin-bottom: 5px;
+}
+.hook-line p {
+  font-family: var(--vy-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--vy-fg-dim);
+}
+
+/* =========================================================
    07 BADGE — record-label oval card
    ========================================================= */
 .badge-scene {
@@ -2261,7 +2459,7 @@ h2.section-title em {
   /* nudge our earlier per-section overrides into mobile values */
   #s01 { padding-top: 80px; }
   #s01 .scene-label { top: 56px; }
-  #s05, #s06 { padding-bottom: 48px; }
+  #s05, #s06, #s07 { padding-bottom: 48px; }
 
   /* scene label closer to the top, smaller, less letter-spacing */
   .scene-label {
@@ -2420,6 +2618,12 @@ h2.section-title em {
 
   /* misc tap targets */
   button, .cam-shutter-btn, .cam-btn, .btn-acid { min-height: 44px; }
+
+  /* ───── 06 HOOK LAB ───── */
+  .hook-bar { flex-direction: column; }
+  .hook-go { width: 100%; justify-content: center; }
+  .hook-text { font-size: 16px; }
+  .hook-script-head h3 { font-size: clamp(30px, 10vw, 44px); }
 }
 
 /* a notch tighter for very narrow phones (<= 380px, iPhone SE / mini sizes) */
@@ -2487,7 +2691,7 @@ h2.section-title em {
 
   /* Sections shouldn't bank dead bottom space */
   section.scene { padding-bottom: 44px; }
-  #s05, #s06 { padding-bottom: 44px; }
+  #s05, #s06, #s07 { padding-bottom: 44px; }
 
   /* Section heads: title left-aligned, meta wraps */
   .section-head .meta { max-width: 100%; }
