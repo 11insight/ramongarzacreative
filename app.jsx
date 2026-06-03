@@ -1467,7 +1467,7 @@ function HookMaker() {
         <span className="tick">/ Topic → Hook → Script</span>
       </div>
       <div className="section-head">
-        <h2 className="glitch-blackletter ai-glitch" data-text="hook lab">hook lab</h2>
+        <h2 className="section-title">Hook<em>lab</em></h2>
         <div className="meta">
           Enter a topic // Pick a hook<br/>
           Pull a full retention-built script
