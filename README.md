@@ -19,12 +19,11 @@ Single-page static site. No build step.
 
 ```
 00  Slate        — blackletter glitch wordmark, bolt → Super-8 lightning
-01  Schedule     — production slate, bolt → paparazzi flash
 02  Reel         — clip grid
 03  Stills       — photo grid with lightbox
-04  Filmcam      — live-canvas camera, 5 presets (Super-8 / Ektachrome / Noir / VHS / CineStill)
-05  Guides       — downloadable PDFs (Vol 01 live · Vol 02–03 drop Jun 15, 2026)
-06  Hook Lab     — Viral Hook Maker: topic → niche-aware hooks → full retention script
+04  Sites        — client websites (Zero Custom work + Melendez)
+05  Apps         — live application builds (screenshots from production Vercel deploys)
+06  Guides       — downloadable PDFs (Vol 01 live · Vol 02–03 drop Jun 15, 2026)
 07  AI Media     — Define / Deploy / Scale
 08  Studio       — ignite bolt → fades to black, terminal types the site source
 09  Contact      — form + Patch Bay (clicking it sends the orbs flying)
