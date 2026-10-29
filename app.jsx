@@ -15,6 +15,15 @@ const PHOTOS = [
   { id: 7, src: `${SQ}/40eb7f97-ddb0-46a3-85d8-581f4f43f6b5/331456531_1442777116256285_7524765528081551750_n.jpg`, code: "RGC-07" },
   { id: 8, src: `${SQ}/988a6539-093f-410e-8f52-d32b3465dcee/DSC00271.jpg`, code: "DSC-00271" }
 ];
+// Newest stills, shown first in Photo. Kept apart so PHOTOS indexes used by Reel stay put.
+const NEW_PHOTOS = [
+  { id: "n1", src: "assets/stills/event-1.jpg", code: "RGC-09", cls: "pv" },
+  { id: "n2", src: "assets/stills/event-2.jpg", code: "RGC-10", cls: "pv" },
+  { id: "n3", src: "assets/stills/pizza.jpg",   code: "RGC-11", cls: "pv" },
+  { id: "n4", src: "assets/stills/wine.jpg",    code: "RGC-12", cls: "pv" },
+  { id: "n5", src: "assets/stills/porsche.jpg", code: "RGC-13", cls: "pv" },
+  { id: "n6", src: "assets/stills/urus.jpg",    code: "RGC-14", cls: "pv" }
+];
 
 /* =========================================================
    Top chrome — fixed nav with REC indicator & live clock
@@ -304,18 +313,18 @@ function Stills({ onPickPhoto }) {
       <div className="scene-label">
         <span className="num">03</span>
         <span>Stills · Still Photography</span>
-        <span className="tick">/ Roll B · 08 Frames</span>
+        <span className="tick">/ Roll B · {String(NEW_PHOTOS.length + PHOTOS.length).padStart(2, "0")} Frames</span>
       </div>
       <div className="section-head">
         <h2 className="section-title">Photo</h2>
       </div>
       <div className="photo-grid">
-        {PHOTOS.map((p, i) => {
-          const cls = `p${i+1}`;
+        {[...NEW_PHOTOS, ...PHOTOS].map((p, i, all) => {
+          const cls = p.cls || `p${p.id}`;
           return (
             <div key={p.id} className={`photo ${cls}`} onClick={() => onPickPhoto(p.src, p.code)}>
               <img src={p.src} alt={p.code} loading="lazy" />
-              <span className="ph-num">{String(i+1).padStart(2,"0")} / 08</span>
+              <span className="ph-num">{String(i+1).padStart(2,"0")} / {String(all.length).padStart(2,"0")}</span>
               <span className="ph-meta"><span className="dot" />{p.code}</span>
             </div>
           );

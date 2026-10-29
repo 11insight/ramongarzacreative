@@ -821,6 +821,8 @@ section.scene.compact .brackets { display: none; }
 .photo.p6 { grid-column: span 7; aspect-ratio: 16/9; }
 .photo.p7 { grid-column: span 5; aspect-ratio: 4/3; }
 .photo.p8 { grid-column: span 4; aspect-ratio: 3/4; }
+/* new portrait stills: three across */
+.photo.pv { grid-column: span 4; aspect-ratio: 4/5; }
 
 /* lightbox */
 .lightbox {
@@ -2649,6 +2651,7 @@ h2.section-title em {
   .photo.p1, .photo.p2, .photo.p3, .photo.p4, .photo.p5, .photo.p6, .photo.p7, .photo.p8 {
     grid-column: span 6; aspect-ratio: 4/3;
   }
+  .photo.pv { grid-column: span 3; aspect-ratio: 4/5; }
   .ai-grid { grid-template-columns: 1fr; }
   .hero-top { grid-template-columns: 1fr; }
   .hero-bottom { grid-template-columns: 1fr; }
@@ -2763,11 +2766,12 @@ h2.section-title em {
   .app-open { opacity: 1; transform: none; }
 
   /* ───── 03 STILLS ───── */
-  .photo-grid { grid-template-columns: 1fr; gap: 10px; }
+  .photo-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .photo.p1, .photo.p2, .photo.p3, .photo.p4,
   .photo.p5, .photo.p6, .photo.p7, .photo.p8 {
     grid-column: 1 / -1; aspect-ratio: 4 / 3;
   }
+  .photo.pv { grid-column: span 1; aspect-ratio: 4 / 5; }
   .photo .ph-num, .photo .ph-meta { font-size: 9px; }
 
   /* ───── 04 FILMCAM (launcher card on main page) ───── */
