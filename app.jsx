@@ -17,6 +17,10 @@ const PHOTOS = [
 ];
 // Newest stills, shown first in Photo. Kept apart so PHOTOS indexes used by Reel stay put.
 const NEW_PHOTOS = [
+  { id: "n7",  src: "assets/stills/law-1.jpg",    code: "RGC-15", cls: "pq" },
+  { id: "n8",  src: "assets/stills/law-2.jpg",    code: "RGC-16", cls: "pq" },
+  { id: "n9",  src: "assets/stills/gun-wall.jpg", code: "RGC-17", cls: "pq" },
+  { id: "n10", src: "assets/stills/gun-case.jpg", code: "RGC-18", cls: "pq" },
   { id: "n1", src: "assets/stills/event-1.jpg", code: "RGC-09", cls: "pv" },
   { id: "n2", src: "assets/stills/event-2.jpg", code: "RGC-10", cls: "pv" },
   { id: "n3", src: "assets/stills/pizza.jpg",   code: "RGC-11", cls: "pv" },
