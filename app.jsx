@@ -207,7 +207,7 @@ function LightningOverlay({ active }) {
 const SPOTS = [
   { id: "evwash",     title: "EV Hand Wash",            tc: "00:00:59:11" },
   { id: "bloodline",  title: "Bloodline Combat Sports", tc: "00:01:06:02" },
-  { id: "vg",         title: "Law Firm Spot",           tc: "00:00:31:15" },
+  { id: "vg",         title: "Vela & Galvan",           tc: "00:00:31:15" },
   { id: "summermoon", title: "Summer Moon Coffee",      tc: "00:00:43:23" },
   { id: "hmgolf",     title: "H&M Golf Cart Sales",     tc: "00:00:46:20" }
 ];
@@ -410,17 +410,6 @@ function Sites() {
       blurb: "Custom law firm site — practice areas, intake, live brand."
     },
     {
-      id: "03",
-      size: "app-eq",
-      img: "assets/sites/ivos.jpg",
-      title: "IVOS Junk Removal",
-      tag: "Junk Removal",
-      stack: "Client Site",
-      host: "ivos",
-      url: null,
-      blurb: "Local junk removal — quote CTAs, service area, call-first design."
-    },
-    {
       id: "04",
       size: "app-eq",
       img: "assets/sites/ramon.jpg",
@@ -429,39 +418,6 @@ function Sites() {
       stack: "Client Site",
       url: "https://ramongarzacreative.com",
       blurb: "Cinematic photo & video studio site for Ramon Garza Creative."
-    },
-    {
-      id: "05",
-      size: "app-eq",
-      img: "assets/sites/joel.jpg",
-      title: "Joel Alvarez",
-      tag: "Personal Trainer",
-      stack: "Client Site",
-      host: "joelalvarez.fit",
-      url: "https://joelalvarez.fit",
-      blurb: "Personal trainer brand site — programs, story, booking path."
-    },
-    {
-      id: "06",
-      size: "app-eq",
-      img: "assets/sites/banderas.jpg",
-      title: "Bandera's Barber & Beauty",
-      tag: "Barber & Salon",
-      stack: "Client Site",
-      host: "banderasbarberandbeauty.com",
-      url: "https://banderasbarberandbeauty.com",
-      blurb: "Barber & beauty shop site — services, hours, walk-in ready."
-    },
-    {
-      id: "07",
-      size: "app-eq",
-      img: "assets/sites/aminocity.jpg",
-      title: "Aminocity LV",
-      tag: "Brand",
-      stack: "Commerce",
-      host: "aminocitylv.xyz",
-      url: "https://aminocitylv.xyz",
-      blurb: "Recovery & performance brand — Vegas-born brand site."
     },
     {
       id: "08",
@@ -473,6 +429,28 @@ function Sites() {
       host: "sincityaminos.com",
       url: "https://sincityaminos.com",
       blurb: "Premium peptides · Las Vegas — research supplies and order flow."
+    },
+    {
+      id: "09",
+      size: "app-eq",
+      img: "assets/sites/11insight.jpg",
+      title: "11insight",
+      tag: "Studio",
+      stack: "Company Site",
+      host: "11insight.com",
+      url: "https://www.11insight.com",
+      blurb: "Custom applications, deployed."
+    },
+    {
+      id: "10",
+      size: "app-eq",
+      img: "assets/sites/11accelerate.jpg",
+      title: "11/acc",
+      tag: "Studio",
+      stack: "Company Site",
+      host: "11accelerate.com",
+      url: "https://www.11accelerate.com",
+      blurb: "Builds product for chaotic environments."
     },
   ];
   return (
@@ -1170,7 +1148,6 @@ function AITools() {
           <span>Stack · GEMINI · GROK</span>
           <span>Patch 26.05</span>
         </div>
-        <a className="btn-acid" href="#s08">✦ See Tools · Deploy</a>
       </div>
     </section>
   );
